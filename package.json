@@ -17,5 +17,11 @@
   },
   "homepage": "https://github.com/LF2Zetrei/Zeno#readme",
   "description": "",
-  "packageManager": "npm@10.9.2"
+  "packageManager": "npm@10.9.2",
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "turbo": "^2.5.3"
+  }
 }
