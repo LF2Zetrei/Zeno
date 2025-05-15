@@ -1,4 +1,4 @@
-#forcer l'encodage dans le power shell
+# forcer l'encodage dans le power shell
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # Vérifie que le fichier .env existe
@@ -18,6 +18,10 @@ Get-Content .env | ForEach-Object {
 }
 
 Write-Host "✅ Variables chargées"
+
+# Répare les migrations Flyway si nécessaire
+Write-Host "🛠️  Vérification Flyway : réparation automatique"
+./gradlew.bat flywayRepair
 
 # Démarre l'application avec Gradle
 Write-Host "🚀 Lancement de Spring Boot avec Gradle"
