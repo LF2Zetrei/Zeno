@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import CustomHeader from "../components/CustomHeader";
 
 export default function InscriptionScreen() {
   const [nom, setNom] = useState("");
