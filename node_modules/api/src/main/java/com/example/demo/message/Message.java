@@ -27,5 +27,43 @@ public class Message {
     @Column(name = "sent_since")
     private ZonedDateTime sentSince;
 
-    // Getters, setters, constructors omis
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public UUID getIdMessage() {
+        return idMessage;
+    }
+
+    public void setIdMessage(UUID idMessage) {
+        this.idMessage = idMessage;
+    }
+
+    public User getRecipient() {
+        return recipient;
+    }
+
+    public void setRecipient(User recipient) {
+        this.recipient = recipient;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public ZonedDateTime getSentSince() {
+        return sentSince;
+    }
+
+    public void setSentSince(ZonedDateTime sentSince) {
+        this.sentSince = sentSince;
+    }
 }
