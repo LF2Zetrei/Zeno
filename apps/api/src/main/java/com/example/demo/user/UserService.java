@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,5 +70,53 @@ public class UserService {
         }
 
         return userRepository.save(user);
+    }
+
+    public void updatePremiumSubscription(User user){
+        user.setPremiumSubscription(!user.isPremiumSubscription());
+        userRepository.save(user);
+    }
+
+    public void updateBasicSubscription(User user){
+        user.setBasicSubscription(!user.isBasicSubscription());
+        userRepository.save(user);
+    }
+
+    public void updateSubscription(String subscriptionType, User user){
+        if ("basic".equalsIgnoreCase(subscriptionType)) {
+            updateBasicSubscription(user);
+        } else if ("premium".equalsIgnoreCase(subscriptionType)) {
+            updatePremiumSubscription(user);
+        } else {
+            throw new IllegalArgumentException("Subscription type not found: " + subscriptionType);
+        }
+    }
+
+    public void rateUser(String userName, Float rate) {
+        User user = userRepository.findByPseudo(userName)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        int numberOfRatings = user.getNumberOfRatings();
+        BigDecimal currentAverage = user.getRatingAverage() != null ? user.getRatingAverage() : BigDecimal.ZERO;
+
+        System.out.println("Before update: ratings = " + numberOfRatings + ", average = " + currentAverage);
+
+        BigDecimal newAverage = currentAverage
+                .multiply(BigDecimal.valueOf(numberOfRatings))
+                .add(BigDecimal.valueOf(rate))
+                .divide(BigDecimal.valueOf(numberOfRatings + 1), 2, RoundingMode.HALF_UP);
+
+        System.out.println("New average calculated: " + newAverage);
+
+        user.setNumberOfRatings(numberOfRatings + 1);
+        user.setRatingAverage(newAverage);
+
+        userRepository.save(user);
+
+        System.out.println("User saved with new ratings = " + user.getNumberOfRatings() + ", new average = " + user.getRatingAverage());
+    }
+
+    public void deleteUser(User user) {
+        userRepository.delete(user);
     }
 }

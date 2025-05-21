@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -31,6 +32,36 @@ public class UserController {
         User user = userService.getUserByJwt(authHeader);
         User updatedUser = userService.updateUserProfile(user, updateRequest);
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @PutMapping("/subscription")
+    public ResponseEntity<?> updateSubscription(@RequestHeader("Authorization") String authHeader,
+                                             @RequestParam("subscriptionType") String subscriptionType) {
+        User user = userService.getUserByJwt(authHeader);
+        userService.updateSubscription(subscriptionType, user);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/rate")
+    public ResponseEntity<?> rateUser(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("rate") Float rate,
+            @RequestParam("userName") String userName) {
+
+        // Appel au service pour mettre à jour la note
+        userService.rateUser(userName, rate);
+
+        // Récupérer l'utilisateur mis à jour pour retourner la réponse (optionnel)
+        User updatedUser = userRepository.findByPseudo(userName).orElse(null);
+
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteMyProfile(@RequestHeader("Authorization") String authHeader) {
+        User user = userService.getUserByJwt(authHeader);
+        userService.deleteUser(user);
+        return ResponseEntity.ok("User deleted successfully");
     }
 
 }
