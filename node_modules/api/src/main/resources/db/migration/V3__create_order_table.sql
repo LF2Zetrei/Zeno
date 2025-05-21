@@ -1,5 +1,5 @@
 CREATE TABLE "order" (
-                         id_order UUID PRIMARY KEY,
+                         id_order UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                          buyer_id UUID NOT NULL,
                          purchase_address VARCHAR(255),
                          purchase_country VARCHAR(100),
