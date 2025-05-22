@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface MissionRepository extends JpaRepository<Mission, UUID> {
     List<Mission> findByTraveler(User traveler);
     Optional<Mission> findByOrder_IdOrder(UUID orderId);
+    Optional<Mission> findByIdMission(UUID id);
 }
