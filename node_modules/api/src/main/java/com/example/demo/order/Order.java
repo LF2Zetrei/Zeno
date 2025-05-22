@@ -1,10 +1,13 @@
 package com.example.demo.order;
 
+import com.example.demo.order_product.OrderProduct;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import com.example.demo.user.User;
 
@@ -13,6 +16,7 @@ import com.example.demo.user.User;
 public class Order {
 
     @Id
+    @GeneratedValue
     @UuidGenerator
     @Column(name = "id_order", nullable = false)
     private UUID idOrder;
@@ -40,6 +44,18 @@ public class Order {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderProduct> orderProducts = new ArrayList<>();
+
+    // getter et setter pour orderProducts
+    public List<OrderProduct> getOrderProducts() {
+        return orderProducts;
+    }
+
+    public void setOrderProducts(List<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
+    }
 
     public Order() {
     }

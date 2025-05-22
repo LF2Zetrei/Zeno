@@ -1,9 +1,12 @@
 package com.example.demo.product;
 
+import com.example.demo.order_product.OrderProduct;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -11,6 +14,7 @@ import java.util.UUID;
 public class Product {
 
     @Id
+    @GeneratedValue
     @UuidGenerator
     @Column(name = "id_product", nullable = false)
     private UUID idProduct;
@@ -36,6 +40,17 @@ public class Product {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderProduct> orderProducts = new ArrayList<>();
+
+    public List<OrderProduct> getOrderProducts() {
+        return orderProducts;
+    }
+
+    public void setOrderProducts(List<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

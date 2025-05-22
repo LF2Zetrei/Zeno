@@ -2,6 +2,7 @@ package com.example.demo.payment;
 
 import com.example.demo.mission.Mission;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,6 +12,8 @@ import java.util.UUID;
 public class Payment {
 
     @Id
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id_payment", nullable = false, unique = true)
     private UUID idPayment;
 

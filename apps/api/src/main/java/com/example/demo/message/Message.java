@@ -2,6 +2,7 @@ package com.example.demo.message;
 
 import com.example.demo.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -11,6 +12,8 @@ import java.util.UUID;
 public class Message {
 
     @Id
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id_message", nullable = false, unique = true)
     private UUID idMessage;
 

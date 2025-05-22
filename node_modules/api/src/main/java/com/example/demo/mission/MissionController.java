@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/missions")
+@RequestMapping("/api/mission")
 public class MissionController {
 
     private final MissionService missionService;

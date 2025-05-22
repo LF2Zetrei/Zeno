@@ -1,14 +1,25 @@
 package com.example.demo.order;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 public class OrderRequest {
-    private String purchaseAddress;
-    private String purchaseCountry;
-    private LocalDate deadline;
-    private UUID productId;
-    private String artisanName;
+        private String purchaseAddress;
+        private String purchaseCountry;
+        private LocalDate deadline;
+        private String artisanName;
+
+        // ✅ Assure-toi d’avoir une liste ici
+        private List<UUID> productIds;
+
+        public List<UUID> getProductIds() {
+            return productIds;
+        }
+
+        public void setProductIds(List<UUID> productIds) {
+            this.productIds = productIds;
+        }
 
     public String getArtisanName() {
         return artisanName;
@@ -24,14 +35,6 @@ public class OrderRequest {
 
     public void setDeadline(LocalDate deadline) {
         this.deadline = deadline;
-    }
-
-    public UUID getProductId() {
-        return productId;
-    }
-
-    public void setProductId(UUID productId) {
-        this.productId = productId;
     }
 
     public String getPurchaseAddress() {

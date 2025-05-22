@@ -26,6 +26,28 @@ public class UserBadge {
     @Column(name = "earned_at")
     private LocalDateTime earnedAt;
 
-    // Getters, setters, constructeurs omis
+    public Badge getBadge() {
+        return badge;
+    }
+
+    public void setBadge(Badge badge) {
+        this.badge = badge;
+    }
+
+    public LocalDateTime getEarnedAt() {
+        return earnedAt;
+    }
+
+    public void setEarnedAt(LocalDateTime earnedAt) {
+        this.earnedAt = earnedAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
 

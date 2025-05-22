@@ -4,6 +4,7 @@ import com.example.demo.tracking.Tracking;
 import com.example.demo.order.Order;
 import com.example.demo.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +15,8 @@ import java.util.UUID;
 public class Mission {
 
     @Id
+    @GeneratedValue
+    @UuidGenerator
     @Column(name = "id_mission", nullable = false, unique = true)
     private UUID idMission;
 

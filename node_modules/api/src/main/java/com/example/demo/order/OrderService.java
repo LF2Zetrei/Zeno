@@ -3,6 +3,7 @@ package com.example.demo.order;
 import com.example.demo.mission.Mission;
 import com.example.demo.mission.MissionRepository;
 import com.example.demo.mission.MissionService;
+import com.example.demo.order_product.OrderProduct;
 import com.example.demo.product.Product;
 import com.example.demo.product.ProductRepository;
 import com.example.demo.user.User;
@@ -36,10 +37,7 @@ public class OrderService {
     }
 
     public Order createOrder(OrderRequest request, String jwt) {
-        User user = userService.getUserByJwt(jwt); // ✅ Utilise UserService
-
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+        User user = userService.getUserByJwt(jwt);
 
         Order order = new Order();
         order.setBuyer(user);
@@ -47,12 +45,24 @@ public class OrderService {
         order.setPurchaseCountry(request.getPurchaseCountry());
         order.setDeadline(request.getDeadline());
         order.setArtisanName(request.getArtisanName());
-        order.setPriceEstimation(product.getEstimatedPrice());
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 
+        // Sauvegarde de la commande (génère un id)
         orderRepository.save(order);
 
+        for (UUID productId : request.getProductIds()) {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+
+            OrderProduct orderProduct = new OrderProduct(order, product, product.getEstimatedPrice());
+            order.getOrderProducts().add(orderProduct);
+        }
+
+        // Sauvegarder l'ordre avec ses produits
+        orderRepository.save(order);
+
+        // Création d’une mission associée
         Mission mission = new Mission();
         mission.setIdMission(UUID.randomUUID());
         mission.setOrder(order);
