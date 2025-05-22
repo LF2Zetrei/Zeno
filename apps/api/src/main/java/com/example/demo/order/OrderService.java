@@ -4,6 +4,7 @@ import com.example.demo.mission.Mission;
 import com.example.demo.mission.MissionRepository;
 import com.example.demo.mission.MissionService;
 import com.example.demo.order_product.OrderProduct;
+import com.example.demo.order_product.OrderProductRepository;
 import com.example.demo.product.Product;
 import com.example.demo.product.ProductRepository;
 import com.example.demo.user.User;
@@ -23,17 +24,19 @@ public class OrderService {
     private final UserRepository userRepository;
     private final UserService userService; // ✅ On injecte UserService
     private final MissionRepository missionRepository;
+    private final OrderProductRepository orderProductRepository;
 
     public OrderService(OrderRepository orderRepository,
                         ProductRepository productRepository,
                         UserRepository userRepository,
                         UserService userService,
-                        MissionRepository missionRepository) {
+                        MissionRepository missionRepository, OrderProductRepository orderProductRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.missionRepository = missionRepository;
+        this.orderProductRepository = orderProductRepository;
     }
 
     public Order createOrder(OrderRequest request, String jwt) {
@@ -119,5 +122,43 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    public void addProductToOrder(UUID productId, UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Commande introuvable"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+
+        // Vérifie si le produit est déjà dans la commande
+        if (orderProductRepository.existsByOrderAndProduct(order, product)) {
+            throw new RuntimeException("Le produit est déjà associé à cette commande.");
+        }
+
+        OrderProduct orderProduct = new OrderProduct(order, product, product.getEstimatedPrice());
+        orderProductRepository.save(orderProduct);
+
+        order.setPriceEstimation(order.getPriceEstimation() + product.getEstimatedPrice());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
+    }
+
+    public void deleteProductInOrder(UUID orderId, UUID productId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Commande introuvable"));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+
+        OrderProduct orderProduct = orderProductRepository
+                .findByOrderAndProduct(order, product)
+                .orElseThrow(() -> new RuntimeException("Le produit n'existe pas dans cette commande."));
+
+        orderProductRepository.delete(orderProduct);
+
+        order.setPriceEstimation(order.getPriceEstimation() - product.getEstimatedPrice());
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
     }
 }

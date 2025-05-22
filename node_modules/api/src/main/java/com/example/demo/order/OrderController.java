@@ -62,5 +62,23 @@ public class OrderController {
         }
         throw new RuntimeException("Token manquant ou invalide");
     }
+
+    @PostMapping("/{orderId}/product/{productId}")
+    public ResponseEntity<Void> addProductToOrder(@PathVariable UUID orderId,
+                                                  @PathVariable UUID productId,
+                                                  @RequestHeader("Authorization") String authHeader) {
+        String jwt = extractToken(authHeader);
+        orderService.addProductToOrder(productId, orderId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{orderId}/product/{productId}")
+    public ResponseEntity<Void> deleteProductInOrder(@PathVariable UUID orderId,
+                                                     @PathVariable UUID productId,
+                                                     @RequestHeader("Authorization") String authHeader) {
+        String jwt = extractToken(authHeader);
+        orderService.deleteProductInOrder(orderId, productId);
+        return ResponseEntity.noContent().build();
+    }
 }
 
