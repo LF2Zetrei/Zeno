@@ -1,9 +1,12 @@
 package com.example.demo.order;
 
+import com.example.demo.user.User;
+import com.example.demo.user.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,16 +15,18 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final UserService userService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, UserService userService) {
         this.orderService = orderService;
+        this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody @Valid OrderRequest request,
-                                             @RequestHeader("Authorization") String authHeader) {
-        String jwt = extractToken(authHeader);
-        Order order = orderService.createOrder(request, jwt);
+    @PostMapping("/create")
+    public ResponseEntity<OrderResponse> createOrder(@RequestHeader("Authorization") String authHeader,
+                                             @RequestBody OrderRequest request) {
+        User user = userService.getUserByJwt(authHeader);
+        OrderResponse order = orderService.createOrder(request, user);
         return ResponseEntity.ok(order);
     }
 

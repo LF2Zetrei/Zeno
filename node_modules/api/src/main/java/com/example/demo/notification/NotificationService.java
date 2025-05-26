@@ -18,8 +18,7 @@ public class NotificationService {
     @Autowired
     private UserRepository userRepository;
 
-    public Notification createNotification(UUID userId, String title, String message) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public Notification createNotification(User user, String title, String message) {
 
         Notification notification = new Notification();
         notification.setIdNotification(UUID.randomUUID());

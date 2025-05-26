@@ -2,6 +2,7 @@ package com.example.demo.user_badge;
 
 import com.example.demo.badge.Badge;
 import com.example.demo.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "user_badge")
 @IdClass(UserBadgeId.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserBadge {
 
     @Id

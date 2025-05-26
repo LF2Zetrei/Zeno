@@ -17,31 +17,31 @@ public class PaymentController {
 
     // 1. Create_payment
     @PostMapping("/create")
-    public ResponseEntity<Payment> createPayment(@RequestParam String stripeId, @RequestParam UUID missionId) {
+    public ResponseEntity<Payment> createPayment(@RequestHeader("Authorization") String authHeader,@RequestParam String stripeId, @RequestParam UUID missionId) {
         return ResponseEntity.ok(paymentService.createPayment(stripeId, missionId));
     }
 
     // 2. Update_payment_status
     @PutMapping("/{paymentId}/validate")
-    public ResponseEntity<Payment> updatePaymentStatus(@PathVariable UUID paymentId) {
+    public ResponseEntity<Payment> updatePaymentStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
         return ResponseEntity.ok(paymentService.updatePaymentStatus(paymentId));
     }
 
     // 3. Went_wrong
     @PutMapping("/{paymentId}/error")
-    public ResponseEntity<Payment> markAsError(@PathVariable UUID paymentId) {
+    public ResponseEntity<Payment> markAsError(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
         return ResponseEntity.ok(paymentService.wentWrong(paymentId));
     }
 
     // 4. Refund_payment
     @PutMapping("/{paymentId}/refund")
-    public ResponseEntity<Payment> refund(@PathVariable UUID paymentId) {
+    public ResponseEntity<Payment> refund(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
         return ResponseEntity.ok(paymentService.refundPayment(paymentId));
     }
 
     // 5. Get_payment_status
     @GetMapping("/{paymentId}/status")
-    public ResponseEntity<String> getStatus(@PathVariable UUID paymentId) {
+    public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
         return ResponseEntity.ok(paymentService.getPaymentStatus(paymentId));
     }
 }

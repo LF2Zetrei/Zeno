@@ -55,6 +55,7 @@ public class TrackingService {
         return trackingRepository.save(tracking);
     }
 
+    /* à modifier */
     public List<Tracking> getTrackingPositions(UUID missionId) {
         return trackingRepository.findByMission_IdMissionOrderByTimestampAsc(missionId);
     }

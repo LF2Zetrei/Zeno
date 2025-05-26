@@ -1,6 +1,7 @@
 package com.example.demo.notification;
 
 import com.example.demo.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "notification")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Notification {
 
     @Id

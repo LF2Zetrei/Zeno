@@ -1,5 +1,6 @@
 package com.example.demo.badge;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -7,6 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "badge")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Badge {
 
     @Id

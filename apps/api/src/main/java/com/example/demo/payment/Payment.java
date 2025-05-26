@@ -1,6 +1,7 @@
 package com.example.demo.payment;
 
 import com.example.demo.mission.Mission;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "payment")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Payment {
 
     @Id

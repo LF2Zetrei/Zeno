@@ -49,6 +49,10 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé pour le token donné"));
     }
 
+    public List<User> getUsersByRatingAverage() {
+        return userRepository.findAllByOrderByRatingAverageDesc();
+    }
+
     public User updateUserProfile(User user, UpdateUserRequest updateRequest) {
         if (updateRequest.getFirstName() != null) user.setFirstName(updateRequest.getFirstName());
         if (updateRequest.getLastName() != null) user.setLastName(updateRequest.getLastName());
@@ -118,5 +122,13 @@ public class UserService {
 
     public void deleteUser(User user) {
         userRepository.delete(user);
+    }
+
+    public String getUserRole(User user){
+        return user.getRole();
+    }
+
+    public Boolean isAdmin(User user){
+        return user.getRole().equals("ADMIN");
     }
 }

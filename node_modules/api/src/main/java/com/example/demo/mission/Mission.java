@@ -3,6 +3,7 @@ package com.example.demo.mission;
 import com.example.demo.tracking.Tracking;
 import com.example.demo.order.Order;
 import com.example.demo.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "mission")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Mission {
 
     @Id
@@ -21,7 +23,7 @@ public class Mission {
     private UUID idMission;
 
     @ManyToOne
-    @JoinColumn(name = "traveler_id", nullable = false)
+    @JoinColumn(name = "traveler_id", nullable = true)
     private User traveler;
 
     @ManyToOne
@@ -35,13 +37,19 @@ public class Mission {
     @Column(name = "acceptance_date")
     private LocalDate acceptanceDate;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private MissionStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void setStatus(MissionStatus status) {
+        this.status = status;
+    }
+    public MissionStatus getStatus() { return status; }
 
     public LocalDate getAcceptanceDate() {
         return acceptanceDate;
@@ -73,14 +81,6 @@ public class Mission {
 
     public void setIdMission(UUID idMission) {
         this.idMission = idMission;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public Tracking getTracking() {

@@ -1,6 +1,7 @@
 package com.example.demo.order;
 
 import com.example.demo.order_product.OrderProduct;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -13,6 +14,7 @@ import com.example.demo.user.User;
 
 @Entity
 @Table(name = "\"order\"")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Order {
 
     @Id

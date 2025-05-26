@@ -1,5 +1,6 @@
 package com.example.demo.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "\"user\"")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -73,6 +75,28 @@ public class User {
 
     @Column(name = "number_of_ratings")
     private Integer numberOfRatings = 0;
+
+    @Column(name="longitude")
+    private Double longitude;
+
+    @Column(name="latitude")
+    private Double latitude;
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
 
     public String getAddress() {
         return address;

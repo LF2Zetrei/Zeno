@@ -44,7 +44,7 @@ public class MessageController {
 
     // Récupérer un message par ID
     @GetMapping("/{messageId}")
-    public ResponseEntity<MesageResponse> getMessageById(@PathVariable UUID messageId) {
+    public ResponseEntity<MesageResponse> getMessageById(@RequestHeader("Authorization") String authHeader,@PathVariable UUID messageId) {
         MesageResponse response = messageService.getMessageById(messageId);
         return ResponseEntity.ok(response);
     }

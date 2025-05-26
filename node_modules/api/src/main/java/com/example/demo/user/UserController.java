@@ -26,6 +26,12 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/best")
+    public ResponseEntity<List<User>> getBestUsers() {
+        List<User> users = userService.getUsersByRatingAverage();
+        return ResponseEntity.ok(users);
+    }
+
     @PutMapping("/update")
     public ResponseEntity<?> updateMyProfile(@RequestHeader("Authorization") String authHeader,
                                              @RequestBody UpdateUserRequest updateRequest) {

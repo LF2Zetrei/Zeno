@@ -2,12 +2,14 @@ package com.example.demo.order_product;
 
 import com.example.demo.order.Order;
 import com.example.demo.product.Product;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 
 @Entity
 @Table(name = "order_product")
 @IdClass(OrderProductId.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class OrderProduct {
 
     @Id

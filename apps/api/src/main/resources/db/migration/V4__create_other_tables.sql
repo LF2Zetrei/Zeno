@@ -1,6 +1,6 @@
 CREATE TABLE mission (
                          id_mission UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                         traveler_id UUID NOT NULL,
+                         traveler_id UUID,
                          order_id UUID NOT NULL,
                          acceptance_date DATE,
                          status VARCHAR(100),
