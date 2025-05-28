@@ -9,7 +9,6 @@ public class MissionResponse {
     private UUID travelerId;
     private String travelerPseudo;
     private UUID orderId;
-    private UUID trackingId;
     private LocalDate acceptanceDate;
     private String status;
     private LocalDateTime createdAt;
@@ -45,14 +44,6 @@ public class MissionResponse {
 
     public void setOrderId(UUID orderId) {
         this.orderId = orderId;
-    }
-
-    public UUID getTrackingId() {
-        return trackingId;
-    }
-
-    public void setTrackingId(UUID trackingId) {
-        this.trackingId = trackingId;
     }
 
     public LocalDate getAcceptanceDate() {

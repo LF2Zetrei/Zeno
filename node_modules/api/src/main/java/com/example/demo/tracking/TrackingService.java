@@ -3,6 +3,7 @@ package com.example.demo.tracking;
 import com.example.demo.mission.Mission;
 import com.example.demo.mission.MissionRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -55,8 +56,14 @@ public class TrackingService {
         return trackingRepository.save(tracking);
     }
 
-    /* à modifier */
-    public List<Tracking> getTrackingPositions(UUID missionId) {
-        return trackingRepository.findByMission_IdMissionOrderByTimestampAsc(missionId);
+    public TrackingResponseDto getTrackingInfo(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Tracking not found"));
+        Tracking tracking = trackingRepository.findByMission(mission)
+                .orElseThrow(() -> new RuntimeException("Tracking not found"));
+
+        return new TrackingResponseDto(
+                tracking.getLatitude(),
+                tracking.getLongitude()
+        );
     }
 }

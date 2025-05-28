@@ -1,5 +1,6 @@
 package com.example.demo.mission;
 
+import com.example.demo.order.Order;
 import com.example.demo.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,4 +13,5 @@ public interface MissionRepository extends JpaRepository<Mission, UUID> {
     List<Mission> findByTraveler(User traveler);
     Optional<Mission> findByOrder_IdOrder(UUID orderId);
     Optional<Mission> findByIdMission(UUID id);
+    Optional<Mission> findByOrder(Order order);
 }

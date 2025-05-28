@@ -1,16 +1,16 @@
 package com.example.demo.order;
 
-import com.example.demo.mission.Mission;
-import com.example.demo.mission.MissionRepository;
-import com.example.demo.mission.MissionStatus;
+import com.example.demo.mission.*;
 import com.example.demo.order_product.OrderProduct;
 import com.example.demo.order_product.OrderProductRepository;
 import com.example.demo.payment.Payment;
+import com.example.demo.payment.PaymentController;
 import com.example.demo.payment.PaymentRepository;
 import com.example.demo.product.Product;
 import com.example.demo.product.ProductRepository;
 import com.example.demo.tracking.Tracking;
 import com.example.demo.tracking.TrackingRepository;
+import com.example.demo.tracking.TrackingResponseDto;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
@@ -61,6 +61,7 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
         order.setPriceEstimation(0.0F);
+        order.setStatus("PENDING");
         orderRepository.save(order);
 
         Mission mission = new Mission();
@@ -68,6 +69,7 @@ public class OrderService {
         mission.setCreatedAt(LocalDateTime.now());
         mission.setUpdatedAt(LocalDateTime.now());
         mission.setStatus(MissionStatus.PENDING);
+        mission.setIsPublic(false);
         missionRepository.save(mission);
 
         Tracking tracking = new Tracking();
@@ -105,30 +107,50 @@ public class OrderService {
         order.setDeadline(request.getDeadline());
         order.setArtisanName(request.getArtisanName());
         order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
 
-        return orderRepository.save(order);
+        Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        mission.setOrder(order);
+        missionRepository.save(mission);
+        return order;
     }
 
+        @Transactional
     public void cancelOrder(UUID orderId, String jwt) {
+
         User user = userService.getUserByJwt(jwt);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable"));
 
         Mission mission = missionRepository.findByOrder_IdOrder(order.getIdOrder())
-                .orElse(null); // On accepte qu’il n’y ait pas de mission
+                .orElse(null); // mission peut être null
 
         List<OrderProduct> orderProducts = orderProductRepository.findByOrder(order);
 
         if (!order.getBuyer().getIdUser().equals(user.getIdUser())) {
-            throw new RuntimeException("Non autorisé à supprimer cette commande");
+            throw new RuntimeException("Non autorisé à supprimer cette commande, vous n'êtes pas la personne qui a crée cette commande");
+        }
+
+        if(mission != null && mission.getAcceptanceDate() != null) {
+            throw new RuntimeException("Non autorisé à supprimer cette commande car la mission est déjà acceptée");
         }
 
         orderProductRepository.deleteAll(orderProducts);
+
         if (mission != null) {
+            // Supprimer d'abord le lien mission -> tracking
+            trackingRepository.findByMission(mission).ifPresent(trackingRepository::delete);
+
+            paymentRepository.findByMission(mission).ifPresent(paymentRepository::delete);
+
+            mission.setOrder(null); // facultatif mais évite les surprises
+            missionRepository.save(mission);
             missionRepository.delete(mission);
         }
+
         orderRepository.delete(order);
     }
+
 
     public List<Order> getMyOrders(String jwt) {
         User user = userService.getUserByJwt(jwt);
@@ -170,6 +192,12 @@ public class OrderService {
         order.setPriceEstimation(order.getPriceEstimation() + product.getEstimatedPrice());
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
+
+        Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment introuvable"));
+        payment.setAmount(order.getPriceEstimation());
+        paymentRepository.save(payment);
+
     }
 
 
@@ -189,6 +217,11 @@ public class OrderService {
         order.setPriceEstimation(order.getPriceEstimation() - product.getEstimatedPrice());
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
+
+        Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment introuvable"));
+        payment.setAmount(order.getPriceEstimation());
+        paymentRepository.save(payment);
     }
 
     /**
@@ -205,5 +238,37 @@ public class OrderService {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
+    }
+
+    public Order updateOrderStatus(UUID orderId, String newStatus) {
+        System.out.println("[updateOrderStatus] MAJ OrderId : " + orderId + " => " + newStatus);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+
+        order.setStatus(newStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+        return orderRepository.save(order);
+    }
+
+    public String getOrderStatus(UUID orderId) {
+        System.out.println("[getOrderStatus] Récupération status pour orderId : " + orderId);
+        String status = String.valueOf(orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order non trouvée"))
+                .getStatus());
+        System.out.println("[getOrderStatus] Status : " + status);
+        return status;
+    }
+
+    public void validateOrder(UUID orderId) {
+        Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
+        Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        mission.setIsPublic(true);
+        missionRepository.save(mission);
+
+    }
+
+    public List<Product> getProductsInOrder(UUID orderId) {
+        Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
+        return order.getOrderProducts().stream().map(OrderProduct::getProduct).toList();
     }
 }

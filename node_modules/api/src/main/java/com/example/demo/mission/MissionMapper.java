@@ -21,12 +21,6 @@ public class MissionMapper {
         } else {
             dto.setOrderId(null);
         }
-
-        if (mission.getTracking() != null) {
-            dto.setTrackingId(mission.getTracking().getIdTracking());
-        } else {
-            dto.setTrackingId(null);
-        }
         dto.setAcceptanceDate(mission.getAcceptanceDate());
         dto.setStatus(String.valueOf(mission.getStatus()));
         dto.setCreatedAt(mission.getCreatedAt());

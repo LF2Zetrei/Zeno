@@ -22,11 +22,6 @@ public class MissionController {
         this.userService = userService;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<MissionResponse> createMission(@RequestHeader("Authorization") String authHeader,@RequestParam UUID orderId) {
-        return ResponseEntity.ok(missionService.createMission(orderId));
-    }
-
     @PutMapping("/{missionId}/status")
     public ResponseEntity<MissionResponse> updateStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId,
                                                 @RequestParam String status) {
@@ -38,9 +33,14 @@ public class MissionController {
         return ResponseEntity.ok(missionService.getMissionStatus(missionId));
     }
 
+    @GetMapping("/{missionId}")
+    public ResponseEntity<MissionResponse> getMissionById(@PathVariable UUID missionId) {
+        return ResponseEntity.ok(missionService.getMissionById(missionId));
+    }
+
     @DeleteMapping("/{missionId}")
     public ResponseEntity<Void> cancelMission(@PathVariable UUID missionId) {
-        missionService.cancelMission(missionId);
+        missionService.deleteMissionAndUpdateCommande(missionId);
         return ResponseEntity.noContent().build();
     }
 

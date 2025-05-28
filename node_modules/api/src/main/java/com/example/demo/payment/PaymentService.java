@@ -19,28 +19,6 @@ public class PaymentService {
         this.missionRepository = missionRepository;
     }
 
-    // 1. Create_payment
-    public Payment createPayment(String stripeId, UUID missionId) {
-        Mission mission = missionRepository.findByIdMission(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission not found"));
-
-        Order order = mission.getOrder();
-        if (order == null || order.getPriceEstimation() == null) {
-            throw new RuntimeException("Order or amount not found");
-        }
-
-        Payment payment = new Payment();
-        payment.setIdPayment(UUID.randomUUID());
-        payment.setStripeId(stripeId);
-        payment.setMission(mission);
-        payment.setStatus("en attente");
-        payment.setCreatedAt(LocalDateTime.now());
-        payment.setUpdatedAt(LocalDateTime.now());
-        payment.setAmount(order.getPriceEstimation());
-
-        return paymentRepository.save(payment);
-    }
-
     // 2. Update_payment_status
     public Payment updatePaymentStatus(UUID paymentId) {
         return paymentRepository.findById(paymentId).map(payment -> {

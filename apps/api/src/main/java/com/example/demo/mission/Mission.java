@@ -26,13 +26,9 @@ public class Mission {
     @JoinColumn(name = "traveler_id", nullable = true)
     private User traveler;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
-
-    @OneToOne
-    @JoinColumn(name = "tracking_id")
-    private Tracking tracking;
 
     @Column(name = "acceptance_date")
     private LocalDate acceptanceDate;
@@ -45,6 +41,16 @@ public class Mission {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "public")
+    private Boolean isPublic;
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 
     public void setStatus(MissionStatus status) {
         this.status = status;
@@ -81,14 +87,6 @@ public class Mission {
 
     public void setIdMission(UUID idMission) {
         this.idMission = idMission;
-    }
-
-    public Tracking getTracking() {
-        return tracking;
-    }
-
-    public void setTracking(Tracking tracking) {
-        this.tracking = tracking;
     }
 
     public User getTraveler() {

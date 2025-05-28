@@ -3,6 +3,8 @@ package com.example.demo.mission;
 import com.example.demo.jwtAuth.JwtUtils;
 import com.example.demo.order.Order;
 import com.example.demo.order.OrderRepository;
+import com.example.demo.payment.Payment;
+import com.example.demo.payment.PaymentRepository;
 import com.example.demo.tracking.Tracking;
 import com.example.demo.tracking.TrackingRepository;
 import com.example.demo.user.User;
@@ -26,39 +28,20 @@ public class MissionService {
     private final JwtUtils jwtUtil;
     private final UserService userService;
     private final TrackingRepository trackingRepository;
+    private final PaymentRepository paymentRepository;
 
     public MissionService(MissionRepository missionRepository,
                           OrderRepository orderRepository,
                           UserRepository userRepository,
                           JwtUtils jwtUtil,
-                          UserService userService, TrackingRepository trackingRepository) {
+                          UserService userService, TrackingRepository trackingRepository, PaymentRepository paymentRepository) {
         this.missionRepository = missionRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
         this.trackingRepository = trackingRepository;
-    }
-
-    @Transactional
-    public MissionResponse createMission(UUID orderId) {
-        System.out.println("[createMission] Création mission pour orderId : " + orderId);
-        Order order = orderRepository.findByIdOrder(orderId)
-                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
-
-        if (missionRepository.findByOrder_IdOrder(orderId).isPresent()) {
-            throw new RuntimeException("Mission déjà existante pour cette commande");
-        }
-
-        Mission mission = new Mission();
-        mission.setIdMission(UUID.randomUUID());
-        mission.setOrder(order);
-        mission.setCreatedAt(LocalDateTime.now());
-        mission.setUpdatedAt(LocalDateTime.now());
-        mission.setStatus(MissionStatus.PENDING);
-
-        Mission saved = missionRepository.save(mission);
-        return MissionMapper.toDto(saved);
+        this.paymentRepository = paymentRepository;
     }
 
     public MissionResponse updateMissionStatus(UUID missionId, String newStatus) {
@@ -81,23 +64,32 @@ public class MissionService {
         return status;
     }
 
-    public void cancelMission(UUID missionId) {
-        System.out.println("[cancelMission] Annulation missionId : " + missionId);
-        Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+    @Transactional
+    public void deleteMissionAndUpdateCommande(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission not found"));
 
-        if ("ACCEPTED".equalsIgnoreCase(String.valueOf(mission.getStatus()))) {
-            throw new RuntimeException("Impossible d'annuler une mission déjà acceptée");
-        }
-        Tracking tracking = mission.getTracking();
+        Order order = mission.getOrder();
+
+        // Supprimer le tracking
+        Tracking tracking = trackingRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Tracking not found"));
         trackingRepository.delete(tracking);
 
+        // Supprimer le paiement
+        Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment not found"));
+        paymentRepository.delete(payment);
+
+        // Supprimer la mission
         missionRepository.delete(mission);
-        System.out.println("[cancelMission] Mission supprimée.");
+
+        // Mettre à jour la commande
+        order.setStatus("CANCELED");
+        order.setUpdatedAt(LocalDateTime.now());
+        orderRepository.save(order);
     }
 
     public List<MissionResponse> getAllMissions() {
-        List<Mission> missions = missionRepository.findAll();
+        List<Mission> missions = missionRepository.findAll().stream().filter(mission -> mission.getIsPublic()).toList();
         return MissionMapper.toDtoList(missions);
     }
 
@@ -133,7 +125,7 @@ public class MissionService {
         List<Mission> nearbyMissions = new ArrayList<>();
 
         for (Mission mission : allMissions) {
-            Tracking tracking = mission.getTracking();
+            Tracking tracking = trackingRepository.findByMission(mission).orElse(null);
             if (tracking != null && tracking.getLatitude() != null && tracking.getLongitude() != null) {
                 double distance = haversine(userLat, userLon, tracking.getLatitude(), tracking.getLongitude());
                 if (distance <= radiusKm) {
@@ -145,6 +137,13 @@ public class MissionService {
 
         System.out.println("[getMissionsNearby] Total missions à proximité : " + nearbyMissions.size());
         return MissionMapper.toDtoList(nearbyMissions);
+    }
+
+    public MissionResponse getMissionById(UUID missionId) {
+        System.out.println("[getMissionById] Mission avec l'id : " + missionId);
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        System.out.println("[getMissionById] Mission récupérées : ");
+        return MissionMapper.toDto(mission);
     }
 
     public static double haversine(double lat1, double lon1, double lat2, double lon2) {

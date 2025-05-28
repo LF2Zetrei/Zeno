@@ -4,7 +4,6 @@ CREATE TABLE mission (
                          order_id UUID NOT NULL,
                          acceptance_date DATE,
                          status VARCHAR(100),
-                         tracking_id UUID, -- OPTIONNEL : sans FK ici
                          created_at TIMESTAMP,
                          updated_at TIMESTAMP,
                          CONSTRAINT fk_traveler FOREIGN KEY (traveler_id) REFERENCES "user"(id_user),

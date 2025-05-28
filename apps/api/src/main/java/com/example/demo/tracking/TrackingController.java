@@ -34,8 +34,8 @@ public class TrackingController {
     }
 
     @GetMapping("/{missionId}/positions")
-    public ResponseEntity<List<Tracking>> getTrackingPositions(@PathVariable UUID missionId) {
-        List<Tracking> positions = trackingService.getTrackingPositions(missionId);
+    public ResponseEntity<TrackingResponseDto> getTrackingPositions(@PathVariable UUID missionId) {
+        TrackingResponseDto positions = trackingService.getTrackingInfo(missionId);
         return ResponseEntity.ok(positions);
     }
 }

@@ -19,7 +19,7 @@ public class Tracking {
     @Column(name = "id_tracking", nullable = false, unique = true)
     private UUID idTracking;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "mission_id", nullable = false)
     private Mission mission;
 

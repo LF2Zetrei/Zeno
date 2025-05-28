@@ -1,5 +1,7 @@
 package com.example.demo.order;
 
+import com.example.demo.mission.MissionResponse;
+import com.example.demo.product.Product;
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
 import jakarta.validation.Valid;
@@ -28,6 +30,17 @@ public class OrderController {
         User user = userService.getUserByJwt(authHeader);
         OrderResponse order = orderService.createOrder(request, user);
         return ResponseEntity.ok(order);
+    }
+
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Order> updateStatus(@RequestHeader("Authorization") String authHeader, @PathVariable UUID orderId,
+                                                        @RequestParam String status) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(orderId, status));
+    }
+
+    @GetMapping("/{orderId}/status")
+    public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID orderId) {
+        return ResponseEntity.ok(orderService.getOrderStatus(orderId));
     }
 
     @PutMapping("/{orderId}")
@@ -84,6 +97,19 @@ public class OrderController {
         String jwt = extractToken(authHeader);
         orderService.deleteProductInOrder(orderId, productId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{orderId}/public")
+    public ResponseEntity<Void> validateOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
+        String jwt = extractToken(authHeader);
+        orderService.validateOrder(orderId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("{orderId}/products")
+    public ResponseEntity<List<Product>> getProductsInOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
+        String jwt = extractToken(authHeader);
+        return ResponseEntity.ok(orderService.getProductsInOrder(orderId));
     }
 }
 

@@ -1,0 +1,2 @@
+ALTER TABLE "order"
+    ADD COLUMN status VARCHAR(30);

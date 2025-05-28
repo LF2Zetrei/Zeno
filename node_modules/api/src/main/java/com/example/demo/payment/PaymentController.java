@@ -15,11 +15,6 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    // 1. Create_payment
-    @PostMapping("/create")
-    public ResponseEntity<Payment> createPayment(@RequestHeader("Authorization") String authHeader,@RequestParam String stripeId, @RequestParam UUID missionId) {
-        return ResponseEntity.ok(paymentService.createPayment(stripeId, missionId));
-    }
 
     // 2. Update_payment_status
     @PutMapping("/{paymentId}/validate")

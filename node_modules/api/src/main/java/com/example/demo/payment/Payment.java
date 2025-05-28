@@ -25,7 +25,7 @@ public class Payment {
     @Column(name = "stripe_id")
     private String stripeId;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "mission_id", nullable = false)
     private Mission mission;
 
