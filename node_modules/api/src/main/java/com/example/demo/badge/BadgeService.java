@@ -31,14 +31,13 @@ public class BadgeService {
         return badgeRepository.save(badge);
     }
 
-    public void assignBadgeToUser(UUID badgeId, UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Badge badge = badgeRepository.findById(badgeId)
+    public void assignBadgeToUser(UUID badgeId, User user) {
+        Badge badge = badgeRepository.findByIdBadge(badgeId)
                 .orElseThrow(() -> new RuntimeException("Badge not found"));
 
-        // Évite les doublons si déjà attribué
-        if (userBadgeRepository.existsByUserAndBadge(user, badge)) return;
+        if (userBadgeRepository.existsByUserAndBadge(user, badge))  {
+            throw new RuntimeException("User already has this badge");
+        }
 
         UserBadge userBadge = new UserBadge();
         userBadge.setUser(user);

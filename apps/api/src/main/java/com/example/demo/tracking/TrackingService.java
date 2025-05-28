@@ -40,8 +40,9 @@ public class TrackingService {
     }
 
     @Transactional
-    public Tracking updateTracking(UUID missionId, UUID trackingId, Float latitude, Float longitude) {
-        Tracking tracking = trackingRepository.findById(trackingId)
+    public Tracking updateTracking(UUID missionId, Float latitude, Float longitude) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Tracking tracking = trackingRepository.findByMission(mission)
                 .orElseThrow(() -> new RuntimeException("Tracking non trouvé"));
 
         if (!tracking.getMission().getIdMission().equals(missionId)) {
@@ -60,7 +61,7 @@ public class TrackingService {
         Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Tracking not found"));
         Tracking tracking = trackingRepository.findByMission(mission)
                 .orElseThrow(() -> new RuntimeException("Tracking not found"));
-
+        System.out.println("[getTrackingInfo] Latitude : " + tracking.getLatitude() + ", Longitude : " + tracking.getLongitude() + "");
         return new TrackingResponseDto(
                 tracking.getLatitude(),
                 tracking.getLongitude()

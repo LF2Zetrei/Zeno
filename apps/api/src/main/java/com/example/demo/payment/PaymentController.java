@@ -17,26 +17,26 @@ public class PaymentController {
 
 
     // 2. Update_payment_status
-    @PutMapping("/{paymentId}/validate")
-    public ResponseEntity<Payment> updatePaymentStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
-        return ResponseEntity.ok(paymentService.updatePaymentStatus(paymentId));
+    @PutMapping("/{missionId}/validate")
+    public ResponseEntity<Payment> updatePaymentStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
+        return ResponseEntity.ok(paymentService.updatePaymentStatus(missionId));
     }
 
     // 3. Went_wrong
-    @PutMapping("/{paymentId}/error")
-    public ResponseEntity<Payment> markAsError(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
-        return ResponseEntity.ok(paymentService.wentWrong(paymentId));
+    @PutMapping("/{missionId}/error")
+    public ResponseEntity<Payment> markAsError(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
+        return ResponseEntity.ok(paymentService.wentWrong(missionId));
     }
 
     // 4. Refund_payment
-    @PutMapping("/{paymentId}/refund")
-    public ResponseEntity<Payment> refund(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
-        return ResponseEntity.ok(paymentService.refundPayment(paymentId));
+    @PutMapping("/{missionId}/refund")
+    public ResponseEntity<Payment> refund(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
+        return ResponseEntity.ok(paymentService.refundPayment(missionId));
     }
 
     // 5. Get_payment_status
-    @GetMapping("/{paymentId}/status")
-    public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID paymentId) {
-        return ResponseEntity.ok(paymentService.getPaymentStatus(paymentId));
+    @GetMapping("/{missionId}/status")
+    public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
+        return ResponseEntity.ok(paymentService.getPaymentStatus(missionId));
     }
 }

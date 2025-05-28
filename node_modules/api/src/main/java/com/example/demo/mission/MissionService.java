@@ -44,6 +44,42 @@ public class MissionService {
         this.paymentRepository = paymentRepository;
     }
 
+    public MissionResponse createMissionFromOrder(UUID orderId){
+        Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
+
+        if(missionRepository.findByOrder(order).isPresent()){
+            throw new RuntimeException("Vous ne pouvez pas créer une mission car la commande en a déjà une associée");
+        }
+
+        Mission mission = new Mission();
+        mission.setOrder(order);
+        mission.setCreatedAt(LocalDateTime.now());
+        mission.setUpdatedAt(LocalDateTime.now());
+        mission.setStatus(MissionStatus.PENDING);
+        mission.setIsPublic(false);
+        missionRepository.save(mission);
+
+        Tracking tracking = new Tracking();
+        tracking.setCreatedAt(LocalDateTime.now());
+        tracking.setUpdatedAt(LocalDateTime.now());
+        tracking.setMission(mission);
+        tracking.setTimestamp(LocalDateTime.now());
+        tracking.setLatitude(null);
+        tracking.setLongitude(null);
+        trackingRepository.save(tracking);
+
+        Payment payment = new Payment();
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setUpdatedAt(LocalDateTime.now());
+        payment.setMission(mission);
+        payment.setStatus("en attente");
+        payment.setStripeId(null);
+        payment.setAmount(order.getPriceEstimation());
+        paymentRepository.save(payment);
+
+        return MissionMapper.toDto(mission);
+    }
+
     public MissionResponse updateMissionStatus(UUID missionId, String newStatus) {
         System.out.println("[updateMissionStatus] MAJ missionId : " + missionId + " => " + newStatus);
         Mission mission = missionRepository.findById(missionId)
@@ -110,6 +146,17 @@ public class MissionService {
         mission.setAcceptanceDate(LocalDate.now());
         mission.setUpdatedAt(LocalDateTime.now());
 
+        Mission updated = missionRepository.save(mission);
+        return MissionMapper.toDto(updated);
+    }
+
+    public MissionResponse unAssignDeliver(UUID missionId, User user) {
+        System.out.println("[unAssignDeliverer] Désaffection du livreur " + user.getIdUser() + " à la mission : " + missionId);
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        mission.setTraveler(null);
+        mission.setStatus(MissionStatus.PENDING);
+        mission.setAcceptanceDate(null);
+        mission.setUpdatedAt(LocalDateTime.now());
         Mission updated = missionRepository.save(mission);
         return MissionMapper.toDto(updated);
     }

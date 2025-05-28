@@ -68,4 +68,16 @@ public class MissionController {
         }
         throw new RuntimeException("Token manquant ou invalide");
     }
+
+    @PostMapping("/{orderId}")
+    public MissionResponse createMissionFromOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader) {
+        return missionService.createMissionFromOrder(orderId);
+    }
+
+    @PutMapping("/{missionId}/unassign")
+    public ResponseEntity<MissionResponse> unAssignDeliverer(@PathVariable UUID missionId,
+                                                           @RequestHeader("Authorization") String authHeader) {
+        User user = userService.getUserByJwt(authHeader);
+        return ResponseEntity.ok(missionService.unAssignDeliver(missionId, user));
+    }
 }

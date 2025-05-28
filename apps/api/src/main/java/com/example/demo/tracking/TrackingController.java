@@ -11,31 +11,25 @@ import java.util.UUID;
 public class TrackingController {
 
     private final TrackingService trackingService;
+    private final TrackingRepository trackingRepository;
 
-    public TrackingController(TrackingService trackingService) {
+    public TrackingController(TrackingService trackingService, TrackingRepository trackingRepository) {
         this.trackingService = trackingService;
+        this.trackingRepository = trackingRepository;
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<Tracking> createTracking(@RequestParam UUID missionId,
-                                                   @RequestParam Float latitude,
-                                                   @RequestParam Float longitude) {
-        Tracking tracking = trackingService.createTracking(missionId, latitude, longitude);
-        return ResponseEntity.ok(tracking);
-    }
-
-    @PutMapping("/{trackingId}/update")
+    @PutMapping("/update")
     public ResponseEntity<Tracking> updateTracking(@RequestParam UUID missionId,
-                                                   @PathVariable UUID trackingId,
                                                    @RequestParam Float latitude,
-                                                   @RequestParam Float longitude) {
-        Tracking tracking = trackingService.updateTracking(missionId, trackingId, latitude, longitude);
+                                                   @RequestParam Float longitude,
+    @RequestHeader("Authorization") String authHeader) {
+        Tracking tracking = trackingService.updateTracking(missionId, latitude, longitude);
         return ResponseEntity.ok(tracking);
     }
 
     @GetMapping("/{missionId}/positions")
-    public ResponseEntity<TrackingResponseDto> getTrackingPositions(@PathVariable UUID missionId) {
-        TrackingResponseDto positions = trackingService.getTrackingInfo(missionId);
-        return ResponseEntity.ok(positions);
+    public ResponseEntity<TrackingResponseDto> getTrackingPositions(@PathVariable UUID missionId, @RequestHeader("Authorization") String authHeader) {
+
+        return ResponseEntity.ok(trackingService.getTrackingInfo(missionId));
     }
 }

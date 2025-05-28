@@ -20,17 +20,20 @@ public class PaymentService {
     }
 
     // 2. Update_payment_status
-    public Payment updatePaymentStatus(UUID paymentId) {
-        return paymentRepository.findById(paymentId).map(payment -> {
+    public Payment updatePaymentStatus(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
+        return paymentRepository.findByMission(mission).map(payment -> {
             payment.setStatus("validé");
             payment.setUpdatedAt(LocalDateTime.now());
+            System.out.println("[updatePaymentStatus] où le payment:" + payment );
             return paymentRepository.save(payment);
         }).orElseThrow(() -> new RuntimeException("Payment not found"));
     }
 
     // 3. Went_wrong
-    public Payment wentWrong(UUID paymentId) {
-        return paymentRepository.findById(paymentId).map(payment -> {
+    public Payment wentWrong(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
+        return paymentRepository.findByMission(mission).map(payment -> {
             payment.setStatus("erreur");
             payment.setUpdatedAt(LocalDateTime.now());
             return paymentRepository.save(payment);
@@ -38,8 +41,9 @@ public class PaymentService {
     }
 
     // 4. Refund_payment
-    public Payment refundPayment(UUID paymentId) {
-        return paymentRepository.findById(paymentId).map(payment -> {
+    public Payment refundPayment(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
+        return paymentRepository.findByMission(mission).map(payment -> {
             payment.setStatus("remboursé");
             payment.setUpdatedAt(LocalDateTime.now());
             return paymentRepository.save(payment);
@@ -47,8 +51,9 @@ public class PaymentService {
     }
 
     // 5. Get_payment_status
-    public String getPaymentStatus(UUID paymentId) {
-        return paymentRepository.findById(paymentId)
+    public String getPaymentStatus(UUID missionId) {
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission not found"));
+        return paymentRepository.findByMission(mission)
                 .map(Payment::getStatus)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
     }

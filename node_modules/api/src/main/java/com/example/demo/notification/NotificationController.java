@@ -1,6 +1,7 @@
 package com.example.demo.notification;
 
 import com.example.demo.user.User;
+import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +18,20 @@ public class NotificationController {
     private NotificationService notificationService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
-    @PostMapping
+    @PostMapping("/{userId}")
     public ResponseEntity<Notification> createNotification(@RequestHeader("Authorization") String authHeader,
                                                            @RequestParam String title,
-                                                           @RequestParam String message) {
-        User user = userService.getUserByJwt(authHeader);
+                                                           @RequestParam String message, @PathVariable UUID userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(notificationService.createNotification(user, title, message));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getUserNotifications(@RequestHeader("Authorization") String authHeader,@PathVariable User user) {
+    @GetMapping("/{user}")
+    public ResponseEntity<List<Notification>> getUserNotifications(@RequestHeader("Authorization") String authHeader) {
+        User user = userService.getUserByJwt(authHeader);
         return ResponseEntity.ok(notificationService.getNotificationsByUser(user));
     }
 
@@ -42,9 +46,10 @@ public class NotificationController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{userId}/unread-count")
-    public ResponseEntity<Long> getUnreadCount(@RequestHeader("Authorization") String authHeader,@PathVariable UUID userId) {
-        return ResponseEntity.ok(notificationService.getUnreadCount(userId));
+    @GetMapping("/user/unread-count")
+    public ResponseEntity<Long> getUnreadCount(@RequestHeader("Authorization") String authHeader) {
+        User user = userService.getUserByJwt(authHeader);
+        return ResponseEntity.ok(notificationService.getUnreadCount(user.getIdUser()));
     }
 }
 

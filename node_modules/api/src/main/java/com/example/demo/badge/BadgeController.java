@@ -22,7 +22,7 @@ public class BadgeController {
     }
 
     @PostMapping
-    public Badge createBadge(@RequestBody BadgeRequest request) {
+    public Badge createBadge(@RequestBody BadgeRequest request, @RequestHeader("Authorization") String authHeader) {
         return badgeService.createBadge(request.getName(), request.getDescription());
     }
 
@@ -30,7 +30,7 @@ public class BadgeController {
     public ResponseEntity<Void> assignBadgeToUser(@PathVariable UUID badgeId,
                                                   @RequestHeader("Authorization") String authHeader) {
         User user = userService.getUserByJwt(authHeader);
-        badgeService.assignBadgeToUser(badgeId, user.getIdUser());
+        badgeService.assignBadgeToUser(badgeId, user);
         return ResponseEntity.ok().build();
     }
 
