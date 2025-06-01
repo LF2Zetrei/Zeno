@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "message")
+@Table(name = "\"messages\"")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Message {
 

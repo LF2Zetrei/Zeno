@@ -15,8 +15,14 @@ import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
 import jakarta.transaction.Transactional;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -51,7 +57,9 @@ public class OrderService {
         this.paymentRepository = paymentRepository;
     }
 
-    public OrderResponse createOrder(OrderRequest request, User user) {
+    public OrderResponse createOrder(OrderRequest request, User user) throws Exception {
+        double[] coords = getLatLongFromAddress(request.getArtisanName()+request.getCity());
+
         Order order = new Order();
         order.setBuyer(user);
         order.setPurchaseAddress(request.getPurchaseAddress());
@@ -62,6 +70,9 @@ public class OrderService {
         order.setUpdatedAt(LocalDateTime.now());
         order.setPriceEstimation(0.0F);
         order.setStatus("PENDING");
+        order.setCity(request.getCity());
+        order.setLatitude((float) coords[0]);
+        order.setLongitude((float) coords[1]);
         orderRepository.save(order);
 
         Mission mission = new Mission();
@@ -237,6 +248,9 @@ public class OrderService {
                 .artisanName(order.getArtisanName())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .city(order.getCity())
+                .latitude(order.getLatitude())
+                .longitude(order.getLongitude())
                 .build();
     }
 
@@ -270,5 +284,38 @@ public class OrderService {
     public List<Product> getProductsInOrder(UUID orderId) {
         Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
         return order.getOrderProducts().stream().map(OrderProduct::getProduct).toList();
+    }
+
+    public static double[] getLatLongFromAddress(String address) throws Exception {
+        String encodedAddress = java.net.URLEncoder.encode(address, java.nio.charset.StandardCharsets.UTF_8);
+        String url = "https://nominatim.openstreetmap.org/search?q=" + encodedAddress + "&format=json&limit=1";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("User-Agent", "JavaGeocodingApp") // obligatoire pour Nominatim
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        JSONArray results = new JSONArray(response.body());
+
+        if (results.length() > 0) {
+            JSONObject location = results.getJSONObject(0);
+            double lat = Double.parseDouble(location.getString("lat"));
+            double lon = Double.parseDouble(location.getString("lon"));
+            return new double[] { lat, lon };
+        } else {
+            throw new Exception("Aucun résultat trouvé pour l'adresse : " + address);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            double[] coords = getLatLongFromAddress("10 rue de Rivoli, Paris");
+            System.out.println("Latitude : " + coords[0] + ", Longitude : " + coords[1]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

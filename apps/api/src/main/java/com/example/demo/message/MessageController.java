@@ -1,5 +1,7 @@
 package com.example.demo.message;
 
+import com.example.demo.user.User;
+import com.example.demo.user.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,18 +13,22 @@ import java.util.UUID;
 public class MessageController {
 
     private final MessageService messageService;
+    private final UserService userService;
 
-    public MessageController(MessageService messageService) {
+    public MessageController(MessageService messageService, UserService userService) {
         this.messageService = messageService;
+        this.userService = userService;
     }
 
     // Créer un message
-    @PostMapping
-    public ResponseEntity<MesageResponse> createMessage(@RequestBody MessageRequest request,
+    @PostMapping("/{userId}")
+    public ResponseEntity<Message> createMessage(
+                                                        @PathVariable UUID userId,
+                                                        @RequestParam String content,
                                                         @RequestHeader("Authorization") String authorization) {
-        String jwt = authorization.replace("Bearer ", "");
-        MesageResponse response = messageService.createMessage(request, jwt);
-        return ResponseEntity.ok(response);
+        User user = userService.getUserByJwt(authorization);
+
+        return ResponseEntity.ok(messageService.createMessage(userId, content, user));
     }
 
     // Récupérer tous les messages avec un contact

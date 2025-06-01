@@ -13,8 +13,36 @@ public class OrderResponse {
     private String artisanName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String city;
+    private Float latitude;
+    private Float longitude;
 
     // Getters & Setters
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public Float getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Float latitude) {
+        this.latitude = latitude;
+    }
+
+    public Float getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Float longitude) {
+        this.longitude = longitude;
+    }
+
     public UUID getIdOrder() {
         return idOrder;
     }
@@ -94,11 +122,27 @@ public class OrderResponse {
         private String artisanName;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
-
+        private String city;
+        private Float latitude;
+        private Float longitude;
         public Builder idOrder(UUID idOrder) {
             this.idOrder = idOrder;
             return this;
         }
+
+        public Builder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public Builder latitude(Float latitude) {
+            this.latitude = latitude;
+            return this;
+        }
+
+        public Builder longitude(Float longitude) {
+            this.longitude = longitude;
+return this; }
 
         public Builder purchaseAddress(String purchaseAddress) {
             this.purchaseAddress = purchaseAddress;
@@ -145,7 +189,10 @@ public class OrderResponse {
             response.setArtisanName(this.artisanName);
             response.setCreatedAt(this.createdAt);
             response.setUpdatedAt(this.updatedAt);
-            return response;
+            response.setCity(this.city);
+            response.setLatitude(this.latitude);
+            response.setLongitude(this.longitude);
+       return response;
         }
     }
 }

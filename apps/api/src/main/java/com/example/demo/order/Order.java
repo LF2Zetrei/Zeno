@@ -50,10 +50,44 @@ public class Order {
     @Column(name = "status")
     private String status;
 
+    @Column(name="latitude")
+    private Float latitude;
+
+    @Column(name="longitude")
+    private Float longitude;
+
+    @Column(name="city")
+    private String city;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
     // getter et setter pour orderProducts
+
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public Float getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Float latitude) {
+        this.latitude = latitude;
+    }
+
+    public Float getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Float longitude) {
+        this.longitude = longitude;
+    }
 
     public String getStatus() {
         return status;

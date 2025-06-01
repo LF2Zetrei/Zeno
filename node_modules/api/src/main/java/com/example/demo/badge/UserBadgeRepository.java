@@ -12,4 +12,5 @@ public interface UserBadgeRepository extends JpaRepository<UserBadge, UserBadgeI
     List<UserBadge> findByUser(User user);
 
     boolean existsByUserAndBadge(User user, Badge badge);
+    List<UserBadge> findByBadge(Badge badge);
 }

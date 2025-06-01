@@ -21,7 +21,7 @@ CREATE TABLE tracking (
                           CONSTRAINT fk_mission_tracking FOREIGN KEY (mission_id) REFERENCES mission(id_mission)
 );
 
-CREATE TABLE message (
+CREATE TABLE "messages" (
                          id_message UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                          sender_id UUID NOT NULL,
                          recipient_id UUID NOT NULL,

@@ -46,6 +46,28 @@ public class BadgeService {
         userBadgeRepository.save(userBadge);
     }
 
+    public void unAssignBadgeToUser(UUID badgeId, User user){
+
+        UserBadge userBadge = userBadgeRepository.findByUser(user).stream()
+                .filter(ub -> ub.getBadge().getIdBadge().equals(badgeId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("User doesn't have this badge"));
+
+        userBadgeRepository.delete(userBadge);
+    }
+
+    public void deleteBadge(UUID badgeId) {
+        Badge badge = badgeRepository.findByIdBadge(badgeId)
+                .orElseThrow(() -> new RuntimeException("Badge not found"));
+
+        // Supprimer tous les liens UserBadge associés à ce badge
+        List<UserBadge> userBadges = userBadgeRepository.findByBadge(badge);
+        userBadgeRepository.deleteAll(userBadges);
+
+        // Supprimer le badge lui-même
+        badgeRepository.delete(badge);
+    }
+
     public List<Badge> getUserBadges(User user) {
         return userBadgeRepository.findByUser(user).stream()
                 .map(UserBadge::getBadge)

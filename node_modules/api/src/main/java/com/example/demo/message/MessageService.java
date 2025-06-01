@@ -3,6 +3,8 @@ package com.example.demo.message;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
+import com.example.demo.message.Message;
+
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
@@ -26,21 +28,18 @@ public class MessageService {
 
 
     // Création d'un message
-    public MesageResponse createMessage(MessageRequest request, String jwt) {
-        User sender = userService.getUserByJwt(jwt);
+    public Message createMessage(UUID recipientId, String content, User sender) {
 
-        User recipient = userRepository.findById(request.getRecipientId())
+        User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() -> new RuntimeException("Destinataire non trouvé"));
 
         Message message = new Message();
-        message.setIdMessage(UUID.randomUUID());
         message.setSender(sender);
         message.setRecipient(recipient);
-        message.setContent(request.getContent());
+        message.setContent(content);
         message.setSentSince(ZonedDateTime.now());
 
-        messageRepository.save(message);
-        return toResponse(message);
+        return messageRepository.save(message);
     }
 
     // Récupérer les messages échangés avec un contact donné (récupère aussi ceux envoyés par le contact)

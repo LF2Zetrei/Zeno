@@ -5,6 +5,7 @@ import com.example.demo.product.Product;
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,11 +26,17 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<OrderResponse> createOrder(@RequestHeader("Authorization") String authHeader,
-                                             @RequestBody OrderRequest request) {
-        User user = userService.getUserByJwt(authHeader);
-        OrderResponse order = orderService.createOrder(request, user);
-        return ResponseEntity.ok(order);
+    public ResponseEntity<?> createOrder(@RequestHeader("Authorization") String authHeader,
+                                         @RequestBody OrderRequest request) {
+        try {
+            User user = userService.getUserByJwt(authHeader);
+            OrderResponse order = orderService.createOrder(request, user);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            // tu peux logger l'erreur ici si besoin
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Erreur lors de la création de la commande : " + e.getMessage());
+        }
     }
 
     @PutMapping("/{orderId}/status")

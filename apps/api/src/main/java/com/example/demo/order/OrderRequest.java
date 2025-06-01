@@ -12,6 +12,7 @@ public class OrderRequest {
 
         // ✅ Assure-toi d’avoir une liste ici
         private List<UUID> productIds;
+        private String city;
 
         public List<UUID> getProductIds() {
             return productIds;
@@ -20,6 +21,12 @@ public class OrderRequest {
         public void setProductIds(List<UUID> productIds) {
             this.productIds = productIds;
         }
+
+        public String getCity() {return city;}
+
+    public void setCity(String city) {
+        this.city = city;
+    }
 
     public String getArtisanName() {
         return artisanName;
