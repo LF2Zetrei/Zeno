@@ -58,7 +58,7 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(OrderRequest request, User user) throws Exception {
-        double[] coords = getLatLongFromAddress(request.getArtisanName()+request.getCity());
+        double[] coords = getLatLongFromAddress(request.getPurchaseAddress()+ " " +request.getCity()+ " "+request.getPurchaseCountry());
 
         Order order = new Order();
         order.setBuyer(user);
@@ -300,7 +300,7 @@ public class OrderService {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         JSONArray results = new JSONArray(response.body());
 
-        if (results.length() > 0) {
+        if (!results.isEmpty()) {
             JSONObject location = results.getJSONObject(0);
             double lat = Double.parseDouble(location.getString("lat"));
             double lon = Double.parseDouble(location.getString("lon"));
@@ -310,12 +310,4 @@ public class OrderService {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-            double[] coords = getLatLongFromAddress("10 rue de Rivoli, Paris");
-            System.out.println("Latitude : " + coords[0] + ", Longitude : " + coords[1]);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
