@@ -1,10 +1,12 @@
 package com.example.demo.message;
 
 import com.example.demo.user.User;
+import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,10 +16,12 @@ public class MessageController {
 
     private final MessageService messageService;
     private final UserService userService;
+    private final UserRepository userRepository;
 
-    public MessageController(MessageService messageService, UserService userService) {
+    public MessageController(MessageService messageService, UserService userService, UserRepository userRepository) {
         this.messageService = messageService;
         this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     // Créer un message
@@ -42,10 +46,15 @@ public class MessageController {
 
     // Récupérer mes contacts (pseudos des personnes avec qui j'ai échangé)
     @GetMapping("/contacts")
-    public ResponseEntity<List<String>> getMyContacts(@RequestHeader("Authorization") String authorization) {
+    public ResponseEntity<List<User>> getMyContacts(@RequestHeader("Authorization") String authorization) {
         String jwt = authorization.replace("Bearer ", "");
         List<String> contacts = messageService.getMyContacts(jwt);
-        return ResponseEntity.ok(contacts);
+        List<User> users = new ArrayList<>();
+        for (String contact : contacts) {
+            User user = userRepository.findByPseudo(contact).orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+            users.add(user);
+        }
+        return ResponseEntity.ok(users);
     }
 
     // Récupérer un message par ID
