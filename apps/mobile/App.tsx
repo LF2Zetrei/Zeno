@@ -7,6 +7,9 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
 import RegisterScreen from "./screens/RegisterScreen";
 import ConnexionScreen from "./screens/ConnexionScreen";
+import ProfilScreen from "./screens/ProfilScreen";
+import EditProfilScreen from "./screens/EditProfilScreen";
+import SubscriptionScreen from "./screens/SubscriptionScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,6 +29,9 @@ function AppRoutes() {
       {token ? (
         <>
           <Stack.Screen name="Accueil" component={HomeScreen} />
+          <Stack.Screen name="Profil" component={ProfilScreen} />
+          <Stack.Screen name="EditProfil" component={EditProfilScreen} />
+          <Stack.Screen name="Sub" component={SubscriptionScreen} />
         </>
       ) : (
         <>
