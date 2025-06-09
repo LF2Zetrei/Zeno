@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Constants from "expo-constants";
 
 export default function RegisterForm() {
   const [form, setForm] = useState({
@@ -30,9 +31,11 @@ export default function RegisterForm() {
     setForm({ ...form, [key]: value });
   };
 
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
+
   const handleRegister = async () => {
     try {
-      const res = await fetch("http://192.168.0.12:8080/api/auth/register", {
+      const res = await fetch(`${API_URL}auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

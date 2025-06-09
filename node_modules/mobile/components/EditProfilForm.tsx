@@ -8,7 +8,8 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { useAuth } from "../context/AuthContext"; // adapte ce chemin si besoin
+import { useAuth } from "../context/AuthContext";
+import Constants from "expo-constants";
 
 interface EditProfileFormProps {
   initialData: {
@@ -28,6 +29,7 @@ interface EditProfileFormProps {
 const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
   const [form, setForm] = useState(initialData);
   const { token } = useAuth();
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm({ ...form, [field]: value });
@@ -35,7 +37,7 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://192.168.0.12:8080/api/user/update", {
+      const response = await fetch(`${API_URL}user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

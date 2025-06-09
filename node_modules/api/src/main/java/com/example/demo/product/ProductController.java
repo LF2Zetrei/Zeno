@@ -16,6 +16,11 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id) {
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+
     @PostMapping
     public ResponseEntity<Product> createProduct(@RequestHeader("Authorization") String authHeader, @RequestBody CreateProductRequest request) {
         return ResponseEntity.ok(productService.createProduct(request));

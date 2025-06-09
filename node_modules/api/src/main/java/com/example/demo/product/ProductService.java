@@ -44,6 +44,11 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product getProductById(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+    }
+
     // Delete
     public void deleteProduct(UUID productId) {
         productRepository.deleteById(productId);

@@ -10,6 +10,12 @@ import ConnexionScreen from "./screens/ConnexionScreen";
 import ProfilScreen from "./screens/ProfilScreen";
 import EditProfilScreen from "./screens/EditProfilScreen";
 import SubscriptionScreen from "./screens/SubscriptionScreen";
+import UserRatingScreen from "./screens/UserRatingScreen";
+import DeleteProfilScreen from "./screens/DeleteProfilScreen";
+import CreateProductScreen from "./screens/CreateProductScreen";
+import EditProductScreen from "./screens/EditProductScreen";
+import DeleteProductScreen from "./screens/DeleteProductScreen";
+import CreateOrderScreen from "./screens/CreateOrderScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -32,11 +38,17 @@ function AppRoutes() {
           <Stack.Screen name="Profil" component={ProfilScreen} />
           <Stack.Screen name="EditProfil" component={EditProfilScreen} />
           <Stack.Screen name="Sub" component={SubscriptionScreen} />
+          <Stack.Screen name="Rate" component={UserRatingScreen} />
+          <Stack.Screen name="Delete" component={DeleteProfilScreen} />
+          <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
+          <Stack.Screen name="EditProduct" component={EditProductScreen} />
+          <Stack.Screen name="DeleteProduct" component={DeleteProductScreen} />
+          <Stack.Screen name="CreateOrder" component={CreateOrderScreen} />
         </>
       ) : (
         <>
-          <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Connexion" component={ConnexionScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
         </>
       )}
     </Stack.Navigator>

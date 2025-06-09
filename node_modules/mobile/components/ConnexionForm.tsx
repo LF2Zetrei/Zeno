@@ -11,16 +11,18 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
+import Constants from "expo-constants";
 
 export default function ConnexionForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("admin123");
   const navigation = useNavigation();
   const { login } = useAuth();
-
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
+  console.log(`${API_URL}auth/login`);
   const handleLogin = async () => {
     try {
-      const res = await fetch("http://192.168.0.12:8080/api/auth/login", {
+      const res = await fetch(`${API_URL}auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: email, password }),

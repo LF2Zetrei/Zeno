@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 export function useUserByJwt() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -14,7 +16,7 @@ export function useUserByJwt() {
           return;
         }
 
-        const res = await fetch("http://192.168.0.12:8080/api/user/me", {
+        const res = await fetch(`${API_URL}user/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

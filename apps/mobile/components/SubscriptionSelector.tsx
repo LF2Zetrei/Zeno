@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import Constants from "expo-constants";
 
 const SubscriptionSelector = () => {
   const { token } = useAuth();
@@ -18,9 +19,11 @@ const SubscriptionSelector = () => {
     setLoading(true);
     setSelected(subscriptionType);
 
+    const API_URL = Constants.expoConfig?.extra?.apiUrl;
+
     try {
       const response = await fetch(
-        `http://192.168.0.12:8080/api/user/subscription?subscriptionType=${subscriptionType}`,
+        `${API_URL}user/subscription?subscriptionType=${subscriptionType}`,
         {
           method: "PUT",
           headers: {
