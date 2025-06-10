@@ -52,11 +52,14 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate("CreateOrder")}>
           <Text style={styles.linkText}>Créer une commande</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("EditOrder")}>
+          <Text style={styles.linkText}>Editer une commande</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.label}>Classement :</Text>
-        <ProductList />
+        <BestUsersList />
       </View>
 
       <LogoutButton />

@@ -11,4 +11,5 @@ export type RootStackParamList = {
   EditProduct: undefined;
   DeleteProduct: undefined;
   CreateOrder: undefined;
+  EditOrder: undefined;
 };

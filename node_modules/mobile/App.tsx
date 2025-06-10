@@ -16,6 +16,7 @@ import CreateProductScreen from "./screens/CreateProductScreen";
 import EditProductScreen from "./screens/EditProductScreen";
 import DeleteProductScreen from "./screens/DeleteProductScreen";
 import CreateOrderScreen from "./screens/CreateOrderScreen";
+import EditOrderScreen from "./screens/EditOrderScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -44,6 +45,7 @@ function AppRoutes() {
           <Stack.Screen name="EditProduct" component={EditProductScreen} />
           <Stack.Screen name="DeleteProduct" component={DeleteProductScreen} />
           <Stack.Screen name="CreateOrder" component={CreateOrderScreen} />
+          <Stack.Screen name="EditOrder" component={EditOrderScreen} />
         </>
       ) : (
         <>

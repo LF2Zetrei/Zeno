@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -69,7 +70,7 @@ public class UserService {
         if (updateRequest.getCountry() != null) user.setCountry(updateRequest.getCountry());
         if (updateRequest.getAddress() != null) user.setAddress(updateRequest.getAddress());
         if (updateRequest.getPostalCode() != null) user.setPostalCode(updateRequest.getPostalCode());
-        if (updateRequest.getPassword() != null && !updateRequest.getPassword().isBlank()) {
+        if (updateRequest.getPassword() != null && !updateRequest.getPassword().isBlank() && !Objects.equals(updateRequest.getPassword(), user.getPassword())) {
             user.setPassword(passwordEncoder.encode(updateRequest.getPassword()));
         }
 
