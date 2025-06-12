@@ -2,54 +2,63 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
-interface Position {
+type Position = {
   latitude: number;
   longitude: number;
-}
+};
 
 export function useTrackingPositions(missionId: string) {
-  const [position, setPosition] = useState<Position | null>(null);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
   useEffect(() => {
-    const fetchTrackingPosition = async () => {
+    if (!missionId) {
+      setLoading(false);
+      setPositions([]);
+      return;
+    }
+
+    const fetchPositions = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
-          console.warn("Aucun token trouvé");
+          setError("Token manquant");
+          setPositions([]);
           setLoading(false);
           return;
         }
 
-        const res = await fetch(`${API_URL}tracking/${missionId}/positions`, {
+        const url = `${API_URL}tracking/${missionId}/positions`;
+        console.log("Fetching tracking positions from:", url);
+
+        const res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!res.ok) {
-          console.error(
-            `Erreur HTTP lors de la récupération des positions pour la mission ${missionId} :`,
-            res.status
+          const errorText = await res.text();
+          throw new Error(
+            `Erreur HTTP ${res.status} : ${res.statusText} - ${errorText}`
           );
-          setPosition(null);
-        } else {
-          const data = await res.json();
-          setPosition(data);
         }
-      } catch (error) {
-        console.error("Erreur lors de la récupération des positions :", error);
-        setPosition(null);
+
+        const data: Position[] = await res.json();
+        setPositions(data);
+      } catch (err: any) {
+        setError(err.message || "Erreur inconnue");
+        setPositions([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (missionId) {
-      fetchTrackingPosition();
-    }
+    fetchPositions();
   }, [missionId]);
 
-  return { position, loading };
+  return { positions, loading, error };
 }
