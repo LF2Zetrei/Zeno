@@ -10,7 +10,13 @@ import {
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 
-const AcceptMissionButton = ({ missionId }: { missionId: string }) => {
+const AcceptMissionButton = ({
+  missionId,
+  onSuccess,
+}: {
+  missionId: string;
+  onSuccess?: () => void; // facultatif
+}) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -22,18 +28,24 @@ const AcceptMissionButton = ({ missionId }: { missionId: string }) => {
         onPress: async () => {
           setLoading(true);
           try {
-            const API_URL = Constants.expoConfig?.extra?.apiUrl;
-            const response = await fetch(
-              `${API_URL}mission/${missionId}/assign`,
-              {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
+            const API_URL = Constants.expoConfig?.extra?.apiUrl || "";
+            const url = `${API_URL.replace(
+              /\/$/,
+              ""
+            )}/mission/${missionId}/assign`;
 
-            if (!response.ok) throw new Error("Échec de l’assignation");
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || "Échec de l’assignation");
+            }
 
             Alert.alert("Mission acceptée !");
+            if (onSuccess) onSuccess();
           } catch (error: any) {
             Alert.alert("Erreur", error.message);
           } finally {

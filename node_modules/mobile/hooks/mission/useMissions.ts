@@ -16,13 +16,12 @@ export function useMissions() {
           setLoading(false);
           return;
         }
-
+        console.log(token);
         const res = await fetch(`${API_URL}mission`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
         if (!res.ok) {
           console.error(
             "Erreur HTTP lors de la récupération des missions :",
@@ -43,6 +42,6 @@ export function useMissions() {
 
     fetchMissions();
   }, []);
-
+  console.log(missions);
   return { missions, loading };
 }

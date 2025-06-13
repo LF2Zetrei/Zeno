@@ -3,13 +3,5 @@ export type RootStackParamList = {
   Register: undefined;
   Connexion: undefined;
   Profil: undefined;
-  EditProfil: undefined;
-  Sub: undefined;
-  Rate: undefined;
-  Delete: undefined;
-  CreateProduct: undefined;
-  EditProduct: undefined;
-  DeleteProduct: undefined;
-  CreateOrder: undefined;
-  EditOrder: undefined;
+  Missions: undefined;
 };

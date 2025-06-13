@@ -10,7 +10,13 @@ import {
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 
-const UnassignMissionButton = ({ missionId }: { missionId: string }) => {
+const UnassignMissionButton = ({
+  missionId,
+  onSuccess,
+}: {
+  missionId: string;
+  onSuccess?: () => void; // optionnel
+}) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -26,18 +32,26 @@ const UnassignMissionButton = ({ missionId }: { missionId: string }) => {
           onPress: async () => {
             setLoading(true);
             try {
-              const API_URL = Constants.expoConfig?.extra?.apiUrl;
-              const response = await fetch(
-                `${API_URL}mission/${missionId}/unassign`,
-                {
-                  method: "PUT",
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
+              const API_URL = Constants.expoConfig?.extra?.apiUrl || "";
+              const url = `${API_URL.replace(
+                /\/$/,
+                ""
+              )}/mission/${missionId}/unassign`;
 
-              if (!response.ok) throw new Error("Échec de la désinscription");
+              const response = await fetch(url, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(
+                  errorData.message || "Échec de la désinscription"
+                );
+              }
 
               Alert.alert("Tu as été retiré de la mission.");
+              if (onSuccess) onSuccess();
             } catch (error: any) {
               Alert.alert("Erreur", error.message);
             } finally {
@@ -64,5 +78,18 @@ const UnassignMissionButton = ({ missionId }: { missionId: string }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 24,
+    gap: 16,
+    alignItems: "center",
+  },
+  warning: {
+    fontSize: 14,
+    color: "#000",
+    textAlign: "center",
+  },
+});
 
 export default UnassignMissionButton;

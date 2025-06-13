@@ -97,6 +97,17 @@ public class UserService {
         }
     }
 
+    public void updateUserRole(User user, String role){
+
+        if (!user.getRole().equals(role) || !user.getRole().equals("USER") || !user.getRole().equals("DELIVER")) {
+            user.setRole(role);
+            userRepository.save(user);
+        }else {
+        throw new IllegalArgumentException("Role is invalid : " + role);
+    }
+
+    }
+
     public void rateUser(String userName, Float rate) {
         User user = userRepository.findByPseudo(userName)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));

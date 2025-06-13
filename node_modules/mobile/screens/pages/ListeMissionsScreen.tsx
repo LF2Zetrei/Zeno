@@ -1,173 +1,147 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, ActivityIndicator, FlatList } from "react-native";
+import { useMissions } from "../../hooks/mission/useMissions";
+import { useMyMissions } from "../../hooks/mission/useMyMissions";
+import { useUserByJwt } from "../../hooks/user/getUserByJwt";
+import AcceptMissionButton from "../../components/AcceptMissionButton";
+import UnassignMissionButton from "../../components/UnassignMissionButton";
 
-type Mission = {
-  idMission: string;
-  orderId: string;
-  // autres champs...
-};
+export default function MissionsScreen() {
+  const { missions: missionsFromHook, loading: loadingMissions } =
+    useMissions();
+  const { myMissions, loading: loadingMyMissions } = useMyMissions();
+  const { user, loading: loadingUser } = useUserByJwt();
 
-type Order = {
-  idOrder: string;
-  purchaseAddress: string;
-  deadline: string;
-  artisanName: string;
-  city: string;
-  // autres champs...
-};
+  // 1. Gérer les missions localement pour rendre la page dynamique
+  const [missions, setMissions] = useState([]);
 
-type Product = {
-  id: string;
-  name: string;
-  // autres champs...
-};
-
-const BASE_URL = "http://192.168.0.20:8080/api/";
-const TOKEN =
-  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0ODg3NDAxMywiZXhwIjoxNzQ4ODc3NjEzfQ.4jHvQzTVFjWMY4wXz-lWBRjL0PunWLcfDYAq8MLuzOo";
-
-export default function ListeMissionsScreen() {
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Dictionnaire missionId -> détails commande + produits
-  const [orderDetails, setOrderDetails] = useState<{
-    [missionId: string]: { order: Order | null; products: Product[] };
-  }>({});
-
+  // Synchroniser missions locales avec missions reçues
   useEffect(() => {
-    const fetchMissions = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}mission`, {
-          headers: { Authorization: TOKEN },
-        });
-        if (!res.ok) throw new Error("Erreur chargement missions");
-        const data: Mission[] = await res.json();
-        setMissions(data);
+    setMissions(missionsFromHook);
+  }, [missionsFromHook]);
 
-        // Pour chaque mission, charger la commande et ses produits
-        data.forEach(async (mission) => {
-          try {
-            // Charger la commande
-            const orderRes = await fetch(
-              `${BASE_URL}order/${mission.orderId}`,
-              {
-                headers: { Authorization: TOKEN },
-              }
-            );
-            if (!orderRes.ok) throw new Error("Erreur chargement commande");
-            const orderData: Order = await orderRes.json();
+  if (loadingMissions || loadingMyMissions || loadingUser) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
-            // Charger les produits de la commande
-            const prodRes = await fetch(
-              `${BASE_URL}order/${mission.orderId}/products`,
-              {
-                headers: { Authorization: TOKEN },
-              }
-            );
-            if (!prodRes.ok) throw new Error("Erreur chargement produits");
-            const productsData: Product[] = await prodRes.json();
-
-            // Stocker dans l’état
-            setOrderDetails((old) => ({
-              ...old,
-              [mission.idMission]: { order: orderData, products: productsData },
-            }));
-          } catch (e) {
-            console.warn("Erreur chargement commande/produits", e);
-          }
-        });
-      } catch (e) {
-        setError((e as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMissions();
-  }, []);
-
-  const renderMission = ({ item }: { item: Mission }) => {
-    const details = orderDetails[item.idMission];
-    return (
-      <View style={styles.card}>
-        <Text style={styles.title}>Mission ID: {item.idMission}</Text>
-        <Text>Order ID: {item.orderId}</Text>
-
-        {details ? (
-          <>
-            <Text>Artisan: {details.order?.artisanName}</Text>
-            <Text>Adresse d'achat: {details.order?.purchaseAddress}</Text>
-            <Text>Deadline: {details.order?.deadline}</Text>
-            <Text>Ville: {details.order?.city}</Text>
-
-            <Text style={{ marginTop: 8, fontWeight: "bold" }}>Produits:</Text>
-            {details.products.length > 0 ? (
-              details.products.map((p) => <Text key={p.id}>- {p.name}</Text>)
-            ) : (
-              <Text>(Aucun produit)</Text>
-            )}
-          </>
-        ) : (
-          <Text>Chargement commande...</Text>
-        )}
-      </View>
+  // Fonction appelée quand on accepte une mission
+  const handleAcceptMission = (missionId) => {
+    setMissions((prevMissions) =>
+      prevMissions.map((m) =>
+        m.idMission === missionId
+          ? {
+              ...m,
+              travelerId: user.idUser,
+              travelerPseudo: user.pseudo,
+              status: "ACCEPTED", // ou le statut que tu veux
+            }
+          : m
+      )
     );
   };
 
-  if (loading) return <ActivityIndicator style={styles.center} size="large" />;
+  // Fonction appelée quand on se retire d'une mission
+  const handleUnassignMission = (missionId) => {
+    setMissions((prevMissions) =>
+      prevMissions.map((m) =>
+        m.idMission === missionId
+          ? {
+              ...m,
+              travelerId: null,
+              travelerPseudo: null,
+              status: "AVAILABLE", // ou le statut initial
+            }
+          : m
+      )
+    );
+  };
 
-  if (error)
+  if (user.role === "USER") {
     return (
-      <View style={styles.center}>
-        <Text style={{ color: "red" }}>{error}</Text>
+      <View style={{ padding: 20 }}>
+        {missions.length === 0 ? (
+          <Text>Aucune mission trouvée</Text>
+        ) : (
+          <FlatList
+            data={missions}
+            keyExtractor={(item) => item.idMission}
+            renderItem={({ item }) => (
+              <>
+                <View
+                  style={{
+                    marginBottom: 15,
+                    padding: 10,
+                    backgroundColor: "#f0f0f0",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                    Mission : {item.idMission}
+                  </Text>
+                  <Text>Commande : {item.orderId}</Text>
+                  <Text>Statut : {item.status}</Text>
+                  <Text>
+                    Créée le : {new Date(item.createdAt).toLocaleDateString()}
+                  </Text>
+                  {item.travelerPseudo && (
+                    <Text>Voyageur : {item.travelerPseudo}</Text>
+                  )}
+                </View>
+                <Text>
+                  {String(item.travelerId) === String(user.idUser) ? (
+                    <UnassignMissionButton
+                      missionId={item.idMission}
+                      onSuccess={() => handleUnassignMission(item.idMission)}
+                    />
+                  ) : (
+                    <AcceptMissionButton
+                      missionId={item.idMission}
+                      onSuccess={() => handleAcceptMission(item.idMission)}
+                    />
+                  )}
+                </Text>
+              </>
+            )}
+          />
+        )}
       </View>
     );
+  }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.pageTitle}>📦 Missions disponibles</Text>
-      <FlatList
-        data={missions}
-        keyExtractor={(item) => item.idMission}
-        renderItem={renderMission}
-        contentContainerStyle={styles.list}
-      />
-    </View>
-  );
+  if (user.role === "DELIVER") {
+    return (
+      <View style={{ padding: 20 }}>
+        {missions.length === 0 ? (
+          <Text>Aucune mission trouvée</Text>
+        ) : (
+          <FlatList
+            data={missions}
+            keyExtractor={(item) => item.idMission}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  marginBottom: 15,
+                  padding: 10,
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                  Mission : {item.idMission}
+                </Text>
+                <Text>Commande : {item.orderId}</Text>
+                <Text>Statut : {item.status}</Text>
+                <Text>
+                  Créée le : {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
+                {item.travelerPseudo && (
+                  <Text>Voyageur : {item.travelerPseudo}</Text>
+                )}
+              </View>
+            )}
+          />
+        )}
+      </View>
+    );
+  }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 16,
-    backgroundColor: "#f4f4f4",
-  },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  list: { paddingBottom: 20 },
-  card: {
-    backgroundColor: "white",
-    padding: 16,
-    borderRadius: 10,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: { fontWeight: "bold", marginBottom: 6, fontSize: 16 },
-});

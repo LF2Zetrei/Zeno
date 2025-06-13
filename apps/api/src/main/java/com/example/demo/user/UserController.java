@@ -32,6 +32,16 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PutMapping("role")
+    public ResponseEntity<?> updateRole(@RequestHeader("Authorization") String authHeader, @RequestParam String role) {
+        User user = userService.getUserByJwt(authHeader);
+
+            userService.updateUserRole(user, role);
+
+
+        return ResponseEntity.ok(user);
+    }
+
     @PutMapping("/update")
     public ResponseEntity<?> updateMyProfile(@RequestHeader("Authorization") String authHeader,
                                              @RequestBody UpdateUserRequest updateRequest) {

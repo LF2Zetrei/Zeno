@@ -5,18 +5,10 @@ import { RootStackParamList } from "./types/navigation";
 import HomeScreen from "./screens/test/HomeScreen";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
-import RegisterScreen from "./screens/test/RegisterScreen";
-import ConnexionScreen from "./screens/test/ConnexionScreen";
-import ProfilScreen from "./screens/test/ProfilScreen";
-import EditProfilScreen from "./screens/test/EditProfilScreen";
-import SubscriptionScreen from "./screens/test/SubscriptionScreen";
-import UserRatingScreen from "./screens/test/UserRatingScreen";
-import DeleteProfilScreen from "./screens/test/DeleteProfilScreen";
-import CreateProductScreen from "./screens/test/CreateProductScreen";
-import EditProductScreen from "./screens/test/EditProductScreen";
-import DeleteProductScreen from "./screens/test/DeleteProductScreen";
-import CreateOrderScreen from "./screens/test/CreateOrderScreen";
-import EditOrderScreen from "./screens/test/EditOrderScreen";
+import RegisterScreen from "./screens/pages/RegisterScreen";
+import ConnexionScreen from "./screens/pages/ConnexionScreen";
+import ProfilScreen from "./screens/pages/ProfilScreen";
+import ListeMissionsScreen from "./screens/pages/ListeMissionsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -37,15 +29,7 @@ function AppRoutes() {
         <>
           <Stack.Screen name="Accueil" component={HomeScreen} />
           <Stack.Screen name="Profil" component={ProfilScreen} />
-          <Stack.Screen name="EditProfil" component={EditProfilScreen} />
-          <Stack.Screen name="Sub" component={SubscriptionScreen} />
-          <Stack.Screen name="Rate" component={UserRatingScreen} />
-          <Stack.Screen name="Delete" component={DeleteProfilScreen} />
-          <Stack.Screen name="CreateProduct" component={CreateProductScreen} />
-          <Stack.Screen name="EditProduct" component={EditProductScreen} />
-          <Stack.Screen name="DeleteProduct" component={DeleteProductScreen} />
-          <Stack.Screen name="CreateOrder" component={CreateOrderScreen} />
-          <Stack.Screen name="EditOrder" component={EditOrderScreen} />
+          <Stack.Screen name="Missions" component={ListeMissionsScreen} />
         </>
       ) : (
         <>
