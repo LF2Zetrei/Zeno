@@ -1,78 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
-import { useAuth } from "../context/AuthContext"; // je suppose que c'est ton hook d'authentification
-
-interface Mission {
-  idMission: string;
-  orderId: string;
-  // autres champs non utilisés ici
-}
-
-interface Order {
-  idOrder: string;
-  artisanName: string;
-  latitude: number;
-  longitude: number;
-  city: string;
-  purchaseAddress: string;
-  deadline: string;
-  priceEstimation: number;
-  orderProducts: Array<{ productName: string }>; // à adapter si tu as un vrai type produit
-}
+import { useMissions } from "../../hooks/mission/useMissions";
+import { useOrderById } from "../../hooks/order/getOrderById";
 
 export default function CarteMissionsMap() {
-  const { token } = useAuth();
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [orders, setOrders] = useState<Record<string, Order>>({}); // clé = orderId
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { missions, loading: loadingMissions } = useMissions();
+  const [selectedMission, setSelectedMission] = useState<string | null>(null); // idMission
 
-  useEffect(() => {
-    async function fetchMissionsAndOrders() {
-      try {
-        // 1) fetch missions
-        const resMissions = await fetch("http://localhost:8080/api/mission", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const missionsData: Mission[] = await resMissions.json();
-        setMissions(missionsData);
-
-        // 2) fetch toutes les commandes liées en parallèle
-        const uniqueOrderIds = Array.from(
-          new Set(missionsData.map((m) => m.orderId))
-        );
-        const ordersFetched: Record<string, Order> = {};
-
-        await Promise.all(
-          uniqueOrderIds.map(async (orderId) => {
-            const resOrder = await fetch(
-              `http://localhost:8080/api/order/${orderId}`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-            if (resOrder.ok) {
-              const orderData: Order = await resOrder.json();
-              ordersFetched[orderId] = orderData;
-            }
-          })
-        );
-
-        setOrders(ordersFetched);
-      } catch (error) {
-        console.error("Erreur fetch missions/orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchMissionsAndOrders();
-  }, [token]);
-
-  if (loading) {
+  // Récupérer la commande liée à la mission sélectionnée
+  const { order, loading: loadingOrder } = useOrderById(
+    selectedMission
+      ? missions.find((m) => m.idMission === selectedMission)?.orderId ?? ""
+      : ""
+  );
+  console.log(order);
+  console.log(missions);
+  if (loadingMissions) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" />
@@ -93,26 +37,24 @@ export default function CarteMissionsMap() {
         }}
       >
         {missions.map((mission) => {
-          const order = orders[mission.orderId];
-          if (!order) return null; // pas encore chargé ou erreur
-
+          const orderId = mission.orderId;
+          // On ne peut afficher le marker que si on a une commande liée (en cache ou chargée)
+          // Ici, on n'a pas le détail complet de toutes les commandes, juste sur sélection
+          // Donc on affiche quand même, mais sans détail complet.
           return (
             <Marker
               key={mission.idMission}
               coordinate={{
-                latitude: order.latitude,
-                longitude: order.longitude,
+                latitude: order?.latitude || 46.5, // fallback, ou mieux : cacher le marker si pas les coordonnées
+                longitude: order?.longitude || 2,
               }}
-              title={order.artisanName || "Mission"}
-              description={`${order.city} - Deadline: ${order.deadline}`}
-              onPress={() => setSelectedMission(mission)}
+              title={`Mission #${mission.idMission}`}
+              description={`Commande ${orderId}`}
+              onPress={() => setSelectedMission(mission.idMission)}
             >
               <Callout>
-                <Text>Artisan : {order.artisanName}</Text>
-                <Text>Adresse : {order.purchaseAddress}</Text>
-                <Text>Ville : {order.city}</Text>
-                <Text>Deadline : {order.deadline}</Text>
-                <Text>Prix estimé : {order.priceEstimation} €</Text>
+                <Text>Mission ID : {mission.idMission}</Text>
+                <Text>Commande ID : {orderId}</Text>
               </Callout>
             </Marker>
           );
@@ -127,32 +69,32 @@ export default function CarteMissionsMap() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {selectedMission && (
+            {loadingOrder ? (
+              <>
+                <ActivityIndicator size="large" />
+                <Text>Chargement des détails de la commande...</Text>
+              </>
+            ) : order ? (
               <>
                 <Text style={styles.modalTitle}>
-                  Mission ID : {selectedMission.idMission}
+                  Mission ID : {selectedMission}
                 </Text>
-                {orders[selectedMission.orderId] ? (
-                  <>
-                    <Text>
-                      Artisan : {orders[selectedMission.orderId].artisanName}
-                    </Text>
-                    <Text>
-                      Adresse :{" "}
-                      {orders[selectedMission.orderId].purchaseAddress}
-                    </Text>
-                    <Text>Ville : {orders[selectedMission.orderId].city}</Text>
-                    <Text>
-                      Deadline : {orders[selectedMission.orderId].deadline}
-                    </Text>
-                    <Text>
-                      Prix estimé :{" "}
-                      {orders[selectedMission.orderId].priceEstimation} €
-                    </Text>
-                  </>
-                ) : (
-                  <Text>Détails de la commande non disponibles</Text>
-                )}
+                <Text>Artisan : {order.artisanName}</Text>
+                <Text>Adresse : {order.purchaseAddress}</Text>
+                <Text>Ville : {order.city}</Text>
+                <Text>Deadline : {order.deadline}</Text>
+                <Text>Prix estimé : {order.priceEstimation} €</Text>
+
+                <Text
+                  style={styles.closeText}
+                  onPress={() => setSelectedMission(null)}
+                >
+                  Fermer
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text>Détails de la commande non disponibles</Text>
                 <Text
                   style={styles.closeText}
                   onPress={() => setSelectedMission(null)}

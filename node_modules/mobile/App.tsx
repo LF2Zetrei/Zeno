@@ -9,6 +9,7 @@ import RegisterScreen from "./screens/pages/RegisterScreen";
 import ConnexionScreen from "./screens/pages/ConnexionScreen";
 import ProfilScreen from "./screens/pages/ProfilScreen";
 import ListeMissionsScreen from "./screens/pages/ListeMissionsScreen";
+import CarteMissionsScreen from "./screens/pages/CarteMissionsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -30,6 +31,7 @@ function AppRoutes() {
           <Stack.Screen name="Accueil" component={HomeScreen} />
           <Stack.Screen name="Profil" component={ProfilScreen} />
           <Stack.Screen name="Missions" component={ListeMissionsScreen} />
+          <Stack.Screen name="Map" component={CarteMissionsScreen} />
         </>
       ) : (
         <>

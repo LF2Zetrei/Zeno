@@ -4,4 +4,5 @@ export type RootStackParamList = {
   Connexion: undefined;
   Profil: undefined;
   Missions: undefined;
+  Map: undefined;
 };

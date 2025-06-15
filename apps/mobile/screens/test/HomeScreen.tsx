@@ -22,9 +22,13 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate("Profil")}>
           <Text style={styles.linkText}>Voir mon profil</Text>
         </TouchableOpacity>
-        <Text style={styles.label}>Mon profil :</Text>
+        <Text style={styles.label}>Les missions :</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Missions")}>
           <Text style={styles.linkText}>Voir les missions</Text>
+        </TouchableOpacity>
+        <Text style={styles.label}>La carte :</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Map")}>
+          <Text style={styles.linkText}>Voir la carte des missons</Text>
         </TouchableOpacity>
       </View>
 

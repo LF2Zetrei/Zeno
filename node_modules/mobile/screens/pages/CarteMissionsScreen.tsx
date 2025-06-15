@@ -1,8 +1,9 @@
+import React, { useEffect, useState } from "react";
 import { View, Text, Platform } from "react-native";
-import { useEffect, useState } from "react";
 
 export default function CarteMissionsScreen() {
-  const [CarteMissionsMap, setCarteMissionsMap] = useState<any>(null);
+  const [CarteMissionsMap, setCarteMissionsMap] =
+    useState<React.ComponentType | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
