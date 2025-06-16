@@ -19,10 +19,12 @@ public class OrderController {
 
     private final OrderService orderService;
     private final UserService userService;
+    private final OrderRepository orderRepository;
 
-    public OrderController(OrderService orderService, UserService userService) {
+    public OrderController(OrderService orderService, UserService userService, OrderRepository orderRepository) {
         this.orderService = orderService;
         this.userService = userService;
+        this.orderRepository = orderRepository;
     }
 
     @PostMapping("/create")
@@ -71,6 +73,11 @@ public class OrderController {
     public ResponseEntity<List<Order>> getMyOrders(@RequestHeader("Authorization") String authHeader) {
         String jwt = extractToken(authHeader);
         return ResponseEntity.ok(orderService.getMyOrders(jwt));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Order>> getAllOrders(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(orderRepository.findAll());
     }
 
     @GetMapping("/{orderId}")

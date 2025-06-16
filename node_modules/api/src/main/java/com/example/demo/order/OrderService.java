@@ -173,10 +173,6 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable"));
 
-        if (!order.getBuyer().getIdUser().equals(user.getIdUser())) {
-            throw new RuntimeException("Non autorisé à voir cette commande");
-        }
-
         return order;
     }
 

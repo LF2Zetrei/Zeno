@@ -5,4 +5,6 @@ export type RootStackParamList = {
   Profil: undefined;
   Missions: undefined;
   Map: undefined;
+  Contact: undefined;
+  Messagerie: undefined;
 };

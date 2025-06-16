@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -7,46 +7,10 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-
-type Contact = {
-  id: string;
-  name: string;
-};
-
-const BASE_URL = "http://localhost:8080/api/message/contacts";
-
-// Remplace ce token par celui obtenu lors de la connexion
-const TOKEN =
-  "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsImlhdCI6MTc0ODc4NDc0OCwiZXhwIjoxNzQ4Nzg4MzQ4fQ.SLOd7NX30xHlFrmCzp8bP7fGagD3DfKTLCAeGYE-slY";
+import { useContacts } from "../../hooks/message/getContacts"; // Ajuste le chemin si besoin
 
 export default function ContactsScreen({ navigation }: any) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const fetchContacts = async () => {
-    try {
-      const response = await fetch(BASE_URL, {
-        headers: {
-          Authorization: TOKEN,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors du chargement des contacts");
-      }
-
-      const data = await response.json();
-      setContacts(data);
-    } catch (error) {
-      console.error("Erreur fetchContacts:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { contacts, loading } = useContacts();
 
   if (loading) {
     return (
@@ -60,18 +24,18 @@ export default function ContactsScreen({ navigation }: any) {
     <View style={styles.container}>
       <FlatList
         data={contacts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.idUser}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.contactItem}
             onPress={() =>
               navigation.navigate("Messagerie", {
-                contactId: item.id,
-                contactName: item.name,
+                contactId: item.idUser,
+                contactName: item.pseudo,
               })
             }
           >
-            <Text style={styles.contactName}>{item.name}</Text>
+            <Text style={styles.contactName}>{item.pseudo}</Text>
           </TouchableOpacity>
         )}
       />

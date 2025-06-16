@@ -1,26 +1,30 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { useMissions } from "../../hooks/mission/useMissions";
-import { useOrderById } from "../../hooks/order/getOrderById";
+import { useAllOrders } from "../../hooks/order/useAllOrders";
 
 export default function CarteMissionsMap() {
   const { missions, loading: loadingMissions } = useMissions();
-  const [selectedMission, setSelectedMission] = useState<string | null>(null); // idMission
+  const { orders, loading: loadingOrders } = useAllOrders();
+  const [selectedMission, setSelectedMission] = useState(null);
 
-  // Récupérer la commande liée à la mission sélectionnée
-  const { order, loading: loadingOrder } = useOrderById(
-    selectedMission
-      ? missions.find((m) => m.idMission === selectedMission)?.orderId ?? ""
-      : ""
-  );
-  console.log(order);
-  console.log(missions);
-  if (loadingMissions) {
+  const missionOrderMap = useMemo(() => {
+    const map = new Map();
+    missions.forEach((mission) => {
+      const order = orders.find((o) => o.idOrder === mission.orderId);
+      if (order) {
+        map.set(mission, order);
+      }
+    });
+    return map;
+  }, [missions, orders]);
+
+  if (loadingMissions || loadingOrders) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" />
-        <Text>Chargement des missions...</Text>
+        <Text>Chargement des missions et commandes...</Text>
       </View>
     );
   }
@@ -36,54 +40,52 @@ export default function CarteMissionsMap() {
           longitudeDelta: 7,
         }}
       >
-        {missions.map((mission) => {
-          const orderId = mission.orderId;
-          // On ne peut afficher le marker que si on a une commande liée (en cache ou chargée)
-          // Ici, on n'a pas le détail complet de toutes les commandes, juste sur sélection
-          // Donc on affiche quand même, mais sans détail complet.
-          return (
-            <Marker
-              key={mission.idMission}
-              coordinate={{
-                latitude: order?.latitude || 46.5, // fallback, ou mieux : cacher le marker si pas les coordonnées
-                longitude: order?.longitude || 2,
-              }}
-              title={`Mission #${mission.idMission}`}
-              description={`Commande ${orderId}`}
-              onPress={() => setSelectedMission(mission.idMission)}
-            >
-              <Callout>
-                <Text>Mission ID : {mission.idMission}</Text>
-                <Text>Commande ID : {orderId}</Text>
-              </Callout>
-            </Marker>
-          );
-        })}
+        {[...missionOrderMap.entries()].map(([mission, order]) => (
+          <Marker
+            key={mission.idMission}
+            coordinate={{
+              latitude: order.latitude,
+              longitude: order.longitude,
+            }}
+            onPress={() => setSelectedMission(mission)}
+          >
+            <Callout>
+              <Text>Mission ID: {mission.idMission}</Text>
+              <Text>Commande ID: {order.idOrder}</Text>
+            </Callout>
+          </Marker>
+        ))}
       </MapView>
 
       <Modal
+        key={selectedMission?.idMission ?? "none"}
         visible={!!selectedMission}
-        transparent
-        animationType="slide"
         onRequestClose={() => setSelectedMission(null)}
+        animationType="slide"
+        transparent
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {loadingOrder ? (
-              <>
-                <ActivityIndicator size="large" />
-                <Text>Chargement des détails de la commande...</Text>
-              </>
-            ) : order ? (
+            {selectedMission ? (
               <>
                 <Text style={styles.modalTitle}>
-                  Mission ID : {selectedMission}
+                  Mission ID : {selectedMission.idMission}
                 </Text>
-                <Text>Artisan : {order.artisanName}</Text>
-                <Text>Adresse : {order.purchaseAddress}</Text>
-                <Text>Ville : {order.city}</Text>
-                <Text>Deadline : {order.deadline}</Text>
-                <Text>Prix estimé : {order.priceEstimation} €</Text>
+                <Text>
+                  Artisan : {missionOrderMap.get(selectedMission).artisanName}
+                </Text>
+                <Text>
+                  Adresse :{" "}
+                  {missionOrderMap.get(selectedMission).purchaseAddress}
+                </Text>
+                <Text>Ville : {missionOrderMap.get(selectedMission).city}</Text>
+                <Text>
+                  Deadline : {missionOrderMap.get(selectedMission).deadline}
+                </Text>
+                <Text>
+                  Prix estimé :{" "}
+                  {missionOrderMap.get(selectedMission).priceEstimation} €
+                </Text>
 
                 <Text
                   style={styles.closeText}
@@ -92,17 +94,7 @@ export default function CarteMissionsMap() {
                   Fermer
                 </Text>
               </>
-            ) : (
-              <>
-                <Text>Détails de la commande non disponibles</Text>
-                <Text
-                  style={styles.closeText}
-                  onPress={() => setSelectedMission(null)}
-                >
-                  Fermer
-                </Text>
-              </>
-            )}
+            ) : null}
           </View>
         </View>
       </Modal>

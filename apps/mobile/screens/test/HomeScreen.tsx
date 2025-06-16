@@ -30,6 +30,10 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate("Map")}>
           <Text style={styles.linkText}>Voir la carte des missons</Text>
         </TouchableOpacity>
+        <Text style={styles.label}>La messagerie :</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
+          <Text style={styles.linkText}>Voir les contacts</Text>
+        </TouchableOpacity>
       </View>
 
       <LogoutButton />
