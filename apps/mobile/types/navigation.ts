@@ -9,4 +9,5 @@ export type RootStackParamList = {
   Messagerie: undefined;
   CreateMission: undefined;
   Orders: undefined;
+  Subscription: undefined;
 };

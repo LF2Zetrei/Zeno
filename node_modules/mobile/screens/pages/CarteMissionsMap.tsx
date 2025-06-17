@@ -1,24 +1,33 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { useMissions } from "../../hooks/mission/useMissions";
-import { useAllOrders } from "../../hooks/order/useAllOrders";
+import { getOrderById } from "../../utils/getOrderById"; // Chemin à adapter
 
 export default function CarteMissionsMap() {
   const { missions, loading: loadingMissions } = useMissions();
-  const { orders, loading: loadingOrders } = useAllOrders();
+  const [ordersMap, setOrdersMap] = useState(new Map());
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedMission, setSelectedMission] = useState(null);
 
-  const missionOrderMap = useMemo(() => {
-    const map = new Map();
-    missions.forEach((mission) => {
-      const order = orders.find((o) => o.idOrder === mission.orderId);
-      if (order) {
-        map.set(mission, order);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!missions || missions.length === 0) return;
+
+      setLoadingOrders(true);
+      const newMap = new Map();
+
+      for (const mission of missions) {
+        const order = await getOrderById(mission.orderId);
+        if (order) newMap.set(mission.idMission, order);
       }
-    });
-    return map;
-  }, [missions, orders]);
+
+      setOrdersMap(newMap);
+      setLoadingOrders(false);
+    };
+
+    fetchOrders();
+  }, [missions]);
 
   if (loadingMissions || loadingOrders) {
     return (
@@ -40,25 +49,30 @@ export default function CarteMissionsMap() {
           longitudeDelta: 7,
         }}
       >
-        {[...missionOrderMap.entries()].map(([mission, order]) => (
-          <Marker
-            key={mission.idMission}
-            coordinate={{
-              latitude: order.latitude,
-              longitude: order.longitude,
-            }}
-            onPress={() => setSelectedMission(mission)}
-          >
-            <Callout>
-              <Text>Mission ID: {mission.idMission}</Text>
-              <Text>Commande ID: {order.idOrder}</Text>
-            </Callout>
-          </Marker>
-        ))}
+        {missions.map((mission) => {
+          const order = ordersMap.get(mission.idMission);
+          if (!order || !order.latitude || !order.longitude) return null;
+
+          return (
+            <Marker
+              key={mission.idMission}
+              coordinate={{
+                latitude: order.latitude,
+                longitude: order.longitude,
+              }}
+              onPress={() => setSelectedMission({ mission, order })}
+            >
+              <Callout>
+                <Text>Mission ID: {mission.idMission}</Text>
+                <Text>Commande ID: {order.idOrder}</Text>
+              </Callout>
+            </Marker>
+          );
+        })}
       </MapView>
 
       <Modal
-        key={selectedMission?.idMission ?? "none"}
+        key={selectedMission?.mission?.idMission ?? "none"}
         visible={!!selectedMission}
         onRequestClose={() => setSelectedMission(null)}
         animationType="slide"
@@ -66,25 +80,17 @@ export default function CarteMissionsMap() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {selectedMission ? (
+            {selectedMission && selectedMission.order ? (
               <>
                 <Text style={styles.modalTitle}>
-                  Mission ID : {selectedMission.idMission}
+                  Mission ID : {selectedMission.mission.idMission}
                 </Text>
+                <Text>Artisan : {selectedMission.order.artisanName}</Text>
+                <Text>Adresse : {selectedMission.order.purchaseAddress}</Text>
+                <Text>Ville : {selectedMission.order.city}</Text>
+                <Text>Deadline : {selectedMission.order.deadline}</Text>
                 <Text>
-                  Artisan : {missionOrderMap.get(selectedMission).artisanName}
-                </Text>
-                <Text>
-                  Adresse :{" "}
-                  {missionOrderMap.get(selectedMission).purchaseAddress}
-                </Text>
-                <Text>Ville : {missionOrderMap.get(selectedMission).city}</Text>
-                <Text>
-                  Deadline : {missionOrderMap.get(selectedMission).deadline}
-                </Text>
-                <Text>
-                  Prix estimé :{" "}
-                  {missionOrderMap.get(selectedMission).priceEstimation} €
+                  Prix estimé : {selectedMission.order.priceEstimation} €
                 </Text>
 
                 <Text

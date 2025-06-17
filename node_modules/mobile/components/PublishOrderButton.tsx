@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   Button,
   Alert,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
+import Constants from "expo-constants";
 
 type Props = {
-  orderId: string;
+  orderId: string | null;
   onSuccess?: () => void;
 };
 
@@ -19,52 +18,58 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handlePublish = () => {
-    Alert.alert(
-      "Rendre publique la commande",
-      "Souhaites-tu la valider et la publier ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        {
-          text: "Valider",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              const API_URL = Constants.expoConfig?.extra?.apiUrl;
-              const response = await fetch(
-                `${API_URL}order/${orderId}/public`,
-                {
-                  method: "PUT",
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
+  const handlePublishOrder = async () => {
+    if (!orderId) {
+      Alert.alert("Champ requis", "L'ID de la commande est requis.");
+      return;
+    }
 
-              if (!response.ok) throw new Error("Échec de la publication");
+    setLoading(true);
 
-              Alert.alert("Commande rendue publique !");
-              onSuccess?.();
-            } catch (error: any) {
-              Alert.alert("Erreur", error.message);
-            } finally {
-              setLoading(false);
-            }
-          },
+    try {
+      const API_URL = Constants.expoConfig?.extra?.apiUrl;
+      const url = `${API_URL}order/${orderId}/public`;
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      ]
-    );
+      });
+
+      if (!response.ok)
+        throw new Error("Erreur lors de la validation de la commande.");
+
+      Alert.alert("Succès", "Commande validée et rendue publique.");
+      onSuccess?.();
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message || "Une erreur est survenue.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.warning}>La commande sera visible publiquement.</Text>
       <Button
-        title="Publier la commande"
-        onPress={handlePublish}
+        title="Valider et publier la commande"
+        onPress={handlePublishOrder}
         disabled={loading}
+        color="#0066CC"
       />
-      {loading && <ActivityIndicator color="#0000ff" />}
+      {loading && <ActivityIndicator color="#0066CC" />}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    elevation: 2,
+  },
+});
 
 export default PublishOrderButton;

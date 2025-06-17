@@ -104,7 +104,7 @@ public class OrderService {
         return mapToResponse(order);
     }
 
-    public Order updateOrder(UUID orderId, OrderRequest request, String jwt) {
+    public OrderResponse updateOrder(UUID orderId, OrderRequest request, String jwt) {
         User user = userService.getUserByJwt(jwt);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable"));
@@ -123,10 +123,12 @@ public class OrderService {
         Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
         mission.setOrder(order);
         missionRepository.save(mission);
-        return order;
+
+        return mapToResponse(order);
     }
 
-        @Transactional
+
+    @Transactional
     public void cancelOrder(UUID orderId, String jwt) {
 
         User user = userService.getUserByJwt(jwt);
@@ -163,18 +165,21 @@ public class OrderService {
     }
 
 
-    public List<Order> getMyOrders(String jwt) {
+    public List<OrderResponse> getMyOrders(String jwt) {
         User user = userService.getUserByJwt(jwt);
-        return orderRepository.findByBuyer(user);
+        List<Order> orders = orderRepository.findByBuyer(user);
+        return orders.stream().map(this::mapToResponse).toList();
     }
 
-    public Order getOrderById(UUID orderId, String jwt) {
+
+    public OrderResponse getOrderById(UUID orderId, String jwt) {
         User user = userService.getUserByJwt(jwt);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande introuvable"));
 
-        return order;
+        return mapToResponse(order);
     }
+
 
     @Transactional
     public void addProductToOrder(UUID productId, UUID orderId) {
@@ -250,15 +255,18 @@ public class OrderService {
                 .build();
     }
 
-    public Order updateOrderStatus(UUID orderId, String newStatus) {
+    public OrderResponse updateOrderStatus(UUID orderId, String newStatus) {
         System.out.println("[updateOrderStatus] MAJ OrderId : " + orderId + " => " + newStatus);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
 
         order.setStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
-        return orderRepository.save(order);
+        orderRepository.save(order);
+
+        return mapToResponse(order);
     }
+
 
     public String getOrderStatus(UUID orderId) {
         System.out.println("[getOrderStatus] Récupération status pour orderId : " + orderId);

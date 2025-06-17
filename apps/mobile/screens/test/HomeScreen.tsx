@@ -65,6 +65,10 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate("CreateMission")}>
           <Text style={styles.linkText}>Créer une mission</Text>
         </TouchableOpacity>
+        <Text style={styles.label}>Vos abonnements :</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Subscription")}>
+          <Text style={styles.linkText}>Voir les offres</Text>
+        </TouchableOpacity>
       </View>
 
       <LogoutButton />

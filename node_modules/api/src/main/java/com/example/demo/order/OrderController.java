@@ -43,7 +43,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<Order> updateStatus(@RequestHeader("Authorization") String authHeader, @PathVariable UUID orderId,
+    public ResponseEntity<OrderResponse> updateStatus(@RequestHeader("Authorization") String authHeader, @PathVariable UUID orderId,
                                                         @RequestParam String status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(orderId, status));
     }
@@ -59,11 +59,11 @@ public class OrderController {
         return ResponseEntity.ok(mission);
     }
     @PutMapping("/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId,
+    public ResponseEntity<OrderResponse> updateOrder(@PathVariable UUID orderId,
                                              @RequestBody @Valid OrderRequest request,
                                              @RequestHeader("Authorization") String authHeader) {
         String jwt = extractToken(authHeader);
-        Order updated = orderService.updateOrder(orderId, request, jwt);
+        OrderResponse updated = orderService.updateOrder(orderId, request, jwt);
         return ResponseEntity.ok(updated);
     }
 
@@ -76,7 +76,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getMyOrders(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<OrderResponse>> getMyOrders(@RequestHeader("Authorization") String authHeader) {
         String jwt = extractToken(authHeader);
         return ResponseEntity.ok(orderService.getMyOrders(jwt));
     }
@@ -87,7 +87,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<Order> getOrderById(@PathVariable UUID orderId,
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable UUID orderId,
                                               @RequestHeader("Authorization") String authHeader) {
         String jwt = extractToken(authHeader);
         return ResponseEntity.ok(orderService.getOrderById(orderId, jwt));

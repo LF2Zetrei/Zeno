@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,61 +7,162 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "../context/AuthContext";
 import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUserByJwt } from "../hooks/user/getUserByJwt";
 
 const SubscriptionSelector = () => {
-  const { token } = useAuth();
+  const { user, loading: userLoading } = useUserByJwt();
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<"basic" | "premium" | null>(null);
+  const [localUser, setLocalUser] = useState<any>(null);
 
-  const updateSubscription = async (subscriptionType: "basic" | "premium") => {
-    setLoading(true);
-    setSelected(subscriptionType);
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
-    const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
-    try {
-      const response = await fetch(
-        `${API_URL}user/subscription?subscriptionType=${subscriptionType}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Échec de la mise à jour");
-      }
-
-      const data = await response.json();
-      Alert.alert("Succès", `Abonnement mis à jour en ${subscriptionType}`);
-    } catch (error: any) {
-      Alert.alert("Erreur", error.message || "Une erreur est survenue");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user && !localUser) {
+      setLocalUser(user);
     }
+  }, [user]);
+
+  const handleSubscription = async (
+    subscriptionType: "basic" | "premium",
+    action: "subscribe" | "unsubscribe"
+  ) => {
+    const confirmText =
+      action === "subscribe"
+        ? `Souhaitez-vous vous abonner à l'offre ${subscriptionType.toUpperCase()} ?`
+        : `Souhaitez-vous vous désabonner de l'offre ${subscriptionType.toUpperCase()} ?`;
+
+    Alert.alert("Confirmation", confirmText, [
+      {
+        text: "Annuler",
+        style: "cancel",
+      },
+      {
+        text: "Confirmer",
+        onPress: async () => {
+          setLoading(true);
+          const token = await AsyncStorage.getItem("token");
+
+          try {
+            const response = await fetch(
+              `${API_URL}user/subscription?subscriptionType=${subscriptionType}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (!response.ok) throw new Error("Échec de la mise à jour");
+
+            const now = new Date().toISOString();
+            setLocalUser((prev: any) => {
+              const updated = { ...prev };
+              if (subscriptionType === "basic") {
+                updated.basicSubscription = action === "subscribe";
+                updated.basicSubscriptionSince =
+                  action === "subscribe" ? now : null;
+              } else {
+                updated.premiumSubscription = action === "subscribe";
+                updated.premiumSubscriptionSince =
+                  action === "subscribe" ? now : null;
+              }
+              return updated;
+            });
+
+            Alert.alert(
+              "Succès",
+              `Abonnement ${
+                action === "subscribe" ? "ajouté" : "annulé"
+              } (${subscriptionType})`
+            );
+          } catch (error: any) {
+            Alert.alert("Erreur", error.message || "Une erreur est survenue");
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
+    ]);
   };
+
+  if (userLoading || !localUser) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  const {
+    basicSubscription,
+    premiumSubscription,
+    basicSubscriptionSince,
+    premiumSubscriptionSince,
+  } = localUser;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Choisir un abonnement</Text>
+      <Text style={styles.title}>Gestion des abonnements</Text>
 
-      <View style={styles.buttons}>
-        <Button
-          title="Abonnement BASIC"
-          color={selected === "basic" ? "green" : undefined}
-          onPress={() => updateSubscription("basic")}
-        />
-        <Button
-          title="Abonnement PREMIUM"
-          color={selected === "premium" ? "gold" : undefined}
-          onPress={() => updateSubscription("premium")}
-        />
-      </View>
+      {/* Aucun abonnement */}
+      {!basicSubscription && !premiumSubscription && (
+        <>
+          <Button
+            title="S'abonner à BASIC"
+            onPress={() => handleSubscription("basic", "subscribe")}
+          />
+          <Button
+            title="S'abonner à PREMIUM"
+            onPress={() => handleSubscription("premium", "subscribe")}
+          />
+        </>
+      )}
+
+      {/* Abonné BASIC */}
+      {basicSubscription && (
+        <>
+          <Text style={styles.info}>
+            Abonné à BASIC depuis le :{" "}
+            {new Date(basicSubscriptionSince).toLocaleDateString()}
+          </Text>
+          <Button
+            title="Se désabonner de BASIC"
+            color="red"
+            onPress={() => handleSubscription("basic", "unsubscribe")}
+          />
+          {!premiumSubscription && (
+            <Button
+              title="S'abonner à PREMIUM"
+              onPress={() => handleSubscription("premium", "subscribe")}
+            />
+          )}
+        </>
+      )}
+
+      {/* Abonné PREMIUM */}
+      {premiumSubscription && (
+        <>
+          <Text style={styles.info}>
+            Abonné à PREMIUM depuis le :{" "}
+            {new Date(premiumSubscriptionSince).toLocaleDateString()}
+          </Text>
+          <Button
+            title="Se désabonner de PREMIUM"
+            color="red"
+            onPress={() => handleSubscription("premium", "unsubscribe")}
+          />
+          {!basicSubscription && (
+            <Button
+              title="S'abonner à BASIC"
+              onPress={() => handleSubscription("basic", "subscribe")}
+            />
+          )}
+        </>
+      )}
 
       {loading && <ActivityIndicator size="large" color="#0000ff" />}
     </View>
@@ -78,9 +179,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  buttons: {
-    flexDirection: "column",
-    gap: 10,
+  info: {
+    fontSize: 14,
+    textAlign: "center",
+    marginVertical: 8,
   },
 });
 

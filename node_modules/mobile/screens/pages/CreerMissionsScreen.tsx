@@ -108,10 +108,7 @@ export default function OrderWizard() {
           Commande #{orderId} a bien été mise à jour avec le produit #
           {productId}.
         </Text>
-        <PublishOrderButton
-          orderId={orderId}
-          onSuccess={handleSuccess}
-        ></PublishOrderButton>
+        <PublishOrderButton orderId={orderId} onSuccess={handleSuccess} />
       </View>
     );
   }
