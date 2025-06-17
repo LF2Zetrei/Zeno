@@ -1,0 +1,144 @@
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  Button,
+  StyleSheet,
+} from "react-native";
+import { useOrders } from "../../hooks/order/useOrders";
+import { useAllMissions } from "../../hooks/mission/useAllMissions";
+import EditOrderForm from "../../components/EditOrderForm";
+import PublishOrderButton from "../../components/PublishOrderButton";
+
+export default function ListeOrderScreen() {
+  const { orders: ordersFromHook, loading: loadingOrders } = useOrders();
+  const { missions: missionsFromHook, loading: loadingMissions } =
+    useAllMissions();
+
+  const [orders, setOrders] = useState([]);
+  const [missionMap, setMissionMap] = useState<Map<string, any>>(new Map());
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOrders(ordersFromHook);
+  }, [ordersFromHook]);
+
+  useEffect(() => {
+    const map = new Map();
+    missionsFromHook.forEach((mission: any) => {
+      const orderId = mission.order?.idOrder;
+      if (orderId) {
+        map.set(orderId, mission);
+      }
+    });
+    setMissionMap(map);
+  }, [missionsFromHook]);
+
+  const handleUpdateOrder = (idOrder: string, updatedData: any) => {
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.idOrder === idOrder ? { ...order, ...updatedData } : order
+      )
+    );
+    setEditingOrderId(null);
+  };
+
+  if (loadingOrders || loadingMissions) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (orders.length === 0) {
+    return (
+      <View style={styles.centered}>
+        <Text>Aucune commande trouvée.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ padding: 20 }}>
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.idOrder}
+        renderItem={({ item }) => {
+          const mission = missionMap.get(item.idOrder);
+
+          if (editingOrderId === item.idOrder) {
+            return (
+              <EditOrderForm
+                orderId={item.idOrder}
+                initialData={{
+                  purchaseAddress: item.purchaseAddress,
+                  purchaseCountry: item.purchaseCountry,
+                  deadline: item.deadline?.slice(0, 10),
+                  artisanName: item.artisanName,
+                }}
+                onSubmit={(updatedData) =>
+                  handleUpdateOrder(item.idOrder, updatedData)
+                }
+              />
+            );
+          }
+
+          return (
+            <View style={styles.card}>
+              <Text style={styles.title}>Commande : {item.idOrder}</Text>
+              <Text>
+                Acheteur : {item.buyer.firstName} {item.buyer.lastName} (
+                {item.buyer.pseudo})
+              </Text>
+              <Text>Adresse d'achat : {item.purchaseAddress}</Text>
+              <Text>Ville : {item.city}</Text>
+              <Text>Pays : {item.purchaseCountry}</Text>
+              <Text>
+                Date limite :{" "}
+                {item.deadline && new Date(item.deadline).toLocaleDateString()}
+              </Text>
+              <Text>Prix estimé : {item.priceEstimation} €</Text>
+              <Text>Artisan : {item.artisanName}</Text>
+              <Text>Statut : {item.status}</Text>
+              <Text>
+                Créée le : {new Date(item.createdAt).toLocaleDateString()}
+              </Text>
+
+              <Button
+                title="Modifier la commande"
+                onPress={() => setEditingOrderId(item.idOrder)}
+              />
+              <Text>Mission isPublic : {String(mission?.isPublic)}</Text>
+              {mission?.isPublic === false && (
+                <PublishOrderButton
+                  orderId={item.idOrder}
+                  onSuccess={() => {
+                    console.log("Mission publiée avec succès");
+                  }}
+                />
+              )}
+            </View>
+          );
+        }}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: {
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+  },
+  title: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  centered: {
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

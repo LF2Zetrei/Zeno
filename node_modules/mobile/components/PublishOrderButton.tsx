@@ -10,7 +10,12 @@ import {
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 
-const PublishOrderButton = ({ orderId }: { orderId: string }) => {
+type Props = {
+  orderId: string;
+  onSuccess?: () => void;
+};
+
+const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +42,7 @@ const PublishOrderButton = ({ orderId }: { orderId: string }) => {
               if (!response.ok) throw new Error("Échec de la publication");
 
               Alert.alert("Commande rendue publique !");
+              onSuccess?.();
             } catch (error: any) {
               Alert.alert("Erreur", error.message);
             } finally {

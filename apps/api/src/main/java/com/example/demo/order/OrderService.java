@@ -276,7 +276,9 @@ public class OrderService {
         missionRepository.save(mission);
 
     }
-
+    public Mission getMissionByOrderId(UUID orderId) {
+        return missionRepository.findByOrder_IdOrder(orderId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+    }
     public List<Product> getProductsInOrder(UUID orderId) {
         Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
         return order.getOrderProducts().stream().map(OrderProduct::getProduct).toList();

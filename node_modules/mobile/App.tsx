@@ -12,6 +12,8 @@ import ListeMissionsScreen from "./screens/pages/ListeMissionsScreen";
 import CarteMissionsScreen from "./screens/pages/CarteMissionsScreen";
 import ContactsScreen from "./screens/pages/ContactsScreen";
 import MessagerieScreen from "./screens/pages/MessagerieScreen";
+import OrderWizard from "./screens/pages/CreerMissionsScreen";
+import ListeOrderScreen from "./screens/pages/ListeOrdersScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,6 +38,8 @@ function AppRoutes() {
           <Stack.Screen name="Map" component={CarteMissionsScreen} />
           <Stack.Screen name="Contact" component={ContactsScreen} />
           <Stack.Screen name="Messagerie" component={MessagerieScreen} />
+          <Stack.Screen name="CreateMission" component={OrderWizard} />
+          <Stack.Screen name="Orders" component={ListeOrderScreen} />
         </>
       ) : (
         <>

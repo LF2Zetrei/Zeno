@@ -129,6 +129,11 @@ public class MissionService {
         return MissionMapper.toDtoList(missions);
     }
 
+    public List<MissionResponse> getPrivateMissions() {
+        List<Mission> missions = missionRepository.findAll();
+        return MissionMapper.toDtoList(missions);
+    }
+
     public List<MissionResponse> getMyMissions(User user) {
         System.out.println("[getMyMissions] Missions de l'utilisateur : " + user.getIdUser());
         List<Mission> missions = missionRepository.findByTraveler(user);

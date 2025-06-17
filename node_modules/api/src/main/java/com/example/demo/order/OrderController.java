@@ -1,5 +1,6 @@
 package com.example.demo.order;
 
+import com.example.demo.mission.Mission;
 import com.example.demo.mission.MissionResponse;
 import com.example.demo.product.Product;
 import com.example.demo.user.User;
@@ -52,6 +53,11 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderStatus(orderId));
     }
 
+    @GetMapping("/{orderId}/mission")
+    public ResponseEntity<Mission> getMissionByOrderId(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader) {
+        Mission mission = orderService.getMissionByOrderId(orderId);
+        return ResponseEntity.ok(mission);
+    }
     @PutMapping("/{orderId}")
     public ResponseEntity<Order> updateOrder(@PathVariable UUID orderId,
                                              @RequestBody @Valid OrderRequest request,

@@ -7,4 +7,6 @@ export type RootStackParamList = {
   Map: undefined;
   Contact: undefined;
   Messagerie: undefined;
+  CreateMission: undefined;
+  Orders: undefined;
 };

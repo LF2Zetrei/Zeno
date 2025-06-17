@@ -5,17 +5,40 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import LogoutButton from "../../components/LogoutButton";
+import { useUserByJwt } from "../../hooks/user/getUserByJwt";
+import { useMissions } from "../../hooks/mission/useMissions";
+import { useTrackingAutomatique } from "../../hooks/position/useRefreshPositionAuto";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Accueil">;
 
 export default function HomeScreen({ navigation }: Props) {
+  const { user, loading: loadingUser } = useUserByJwt();
+  const { missions, loading: loadingMissions } = useMissions();
+
+  const missionsFiltrees = missions.filter(
+    (mission) => mission.traveler?.idUser === user?.idUser
+  );
+
+  const missionIds = missionsFiltrees.map((mission) => mission.idMission);
+
+  useTrackingAutomatique(missionIds);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Bienvenue sur la page d'accueil !</Text>
+
+      {(loadingUser || loadingMissions) && <ActivityIndicator />}
+
+      <Text style={{ marginBottom: 10 }}>
+        {missionIds.length > 0
+          ? `Tracking actif pour ${missionIds.length} mission(s)`
+          : "Aucune mission en cours à suivre"}
+      </Text>
 
       <View style={styles.section}>
         <Text style={styles.label}>Mon profil :</Text>
@@ -26,6 +49,10 @@ export default function HomeScreen({ navigation }: Props) {
         <TouchableOpacity onPress={() => navigation.navigate("Missions")}>
           <Text style={styles.linkText}>Voir les missions</Text>
         </TouchableOpacity>
+        <Text style={styles.label}>Vos commandes:</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
+          <Text style={styles.linkText}>Voir vos commandes</Text>
+        </TouchableOpacity>
         <Text style={styles.label}>La carte :</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Map")}>
           <Text style={styles.linkText}>Voir la carte des missons</Text>
@@ -33,6 +60,10 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.label}>La messagerie :</Text>
         <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
           <Text style={styles.linkText}>Voir les contacts</Text>
+        </TouchableOpacity>
+        <Text style={styles.label}>Créer vos missions :</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("CreateMission")}>
+          <Text style={styles.linkText}>Créer une mission</Text>
         </TouchableOpacity>
       </View>
 

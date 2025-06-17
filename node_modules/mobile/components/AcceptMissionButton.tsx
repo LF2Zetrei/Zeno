@@ -9,16 +9,18 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
+import { useActualiserPositionTracking } from "../hooks/position/useRTefreshPosition";
 
 const AcceptMissionButton = ({
   missionId,
   onSuccess,
 }: {
   missionId: string;
-  onSuccess?: () => void; // facultatif
+  onSuccess?: () => void;
 }) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { actualiserPosition } = useActualiserPositionTracking();
 
   const handleAcceptMission = () => {
     Alert.alert("Accepter la mission", "Souhaites-tu devenir le livreur ?", [
@@ -43,6 +45,9 @@ const AcceptMissionButton = ({
               const errorData = await response.json().catch(() => ({}));
               throw new Error(errorData.message || "Échec de l’assignation");
             }
+
+            // ✅ Mise à jour immédiate de la position
+            await actualiserPosition(missionId);
 
             Alert.alert("Mission acceptée !");
             if (onSuccess) onSuccess();

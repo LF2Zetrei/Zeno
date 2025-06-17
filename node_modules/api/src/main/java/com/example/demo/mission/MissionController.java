@@ -49,6 +49,11 @@ public class MissionController {
         return ResponseEntity.ok(missionService.getAllMissions());
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<MissionResponse>> getMissionsAll(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(missionService.getPrivateMissions());
+    }
+
     @GetMapping("/me")
     public ResponseEntity<List<MissionResponse>> getMyMissions(@RequestHeader("Authorization") String authHeader) {
         User user = userService.getUserByJwt(authHeader);
