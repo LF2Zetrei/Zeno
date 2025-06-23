@@ -1,11 +1,14 @@
 package com.example.demo.order;
 
+import com.example.demo.user.User;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class OrderResponse {
     private UUID idOrder;
+    private User buyer;
     private String purchaseAddress;
     private String purchaseCountry;
     private LocalDate deadline;
@@ -18,6 +21,14 @@ public class OrderResponse {
     private Float longitude;
 
     // Getters & Setters
+
+    public User getBuyer() {
+        return buyer;
+    }
+
+    public void setBuyer(User buyer) {
+        this.buyer = buyer;
+    }
 
     public String getCity() {
         return city;
@@ -115,6 +126,7 @@ public class OrderResponse {
     // ✅ Classe Builder manuelle
     public static class Builder {
         private UUID idOrder;
+        private User buyer;
         private String purchaseAddress;
         private String purchaseCountry;
         private LocalDate deadline;
@@ -127,6 +139,11 @@ public class OrderResponse {
         private Float longitude;
         public Builder idOrder(UUID idOrder) {
             this.idOrder = idOrder;
+            return this;
+        }
+
+        public Builder buyer(User buyer) {
+            this.buyer = buyer;
             return this;
         }
 
@@ -182,6 +199,7 @@ return this; }
         public OrderResponse build() {
             OrderResponse response = new OrderResponse();
             response.setIdOrder(this.idOrder);
+            response.setBuyer(this.buyer);
             response.setPurchaseAddress(this.purchaseAddress);
             response.setPurchaseCountry(this.purchaseCountry);
             response.setDeadline(this.deadline);

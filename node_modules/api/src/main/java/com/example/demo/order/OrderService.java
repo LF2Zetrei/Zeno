@@ -242,6 +242,7 @@ public class OrderService {
     private OrderResponse mapToResponse(Order order) {
         return OrderResponse.builder()
                 .idOrder(order.getIdOrder())
+                .buyer(order.getBuyer())
                 .purchaseAddress(order.getPurchaseAddress())
                 .purchaseCountry(order.getPurchaseCountry())
                 .deadline(order.getDeadline())

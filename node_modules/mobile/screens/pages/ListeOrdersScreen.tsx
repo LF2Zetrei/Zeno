@@ -8,34 +8,52 @@ import {
   StyleSheet,
 } from "react-native";
 import { useOrders } from "../../hooks/order/useOrders";
-import { useAllMissions } from "../../hooks/mission/useAllMissions";
 import EditOrderForm from "../../components/EditOrderForm";
 import PublishOrderButton from "../../components/PublishOrderButton";
+import { getMissionByOrderId } from "../../utils/getMissionByOrderId";
 
 export default function ListeOrderScreen() {
   const { orders: ordersFromHook, loading: loadingOrders } = useOrders();
-  const { missions: missionsFromHook, loading: loadingMissions } =
-    useAllMissions();
 
   const [orders, setOrders] = useState([]);
-  const [missionMap, setMissionMap] = useState<Map<string, any>>(new Map());
+  const [missions, setMissions] = useState<Record<string, any>>({});
+  const [loadingMissions, setLoadingMissions] = useState(true);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
 
+  // Charger les commandes
   useEffect(() => {
     setOrders(ordersFromHook);
   }, [ordersFromHook]);
 
   useEffect(() => {
-    const map = new Map();
-    missionsFromHook.forEach((mission: any) => {
-      const orderId = mission.order?.idOrder;
-      if (orderId) {
-        map.set(orderId, mission);
-      }
-    });
-    setMissionMap(map);
-  }, [missionsFromHook]);
+    const fetchMissions = async () => {
+      setLoadingMissions(true);
+      const missionMap: Record<string, any> = {};
 
+      for (const order of ordersFromHook) {
+        try {
+          const mission = await getMissionByOrderId(order.idOrder);
+          if (mission) {
+            missionMap[order.idOrder] = mission;
+          }
+        } catch (error) {
+          console.error(
+            `Erreur lors de la récupération de la mission pour ${order.idOrder}`,
+            error
+          );
+        }
+      }
+
+      setMissions(missionMap);
+      setLoadingMissions(false);
+    };
+
+    if (ordersFromHook.length > 0) {
+      fetchMissions();
+    }
+  }, [ordersFromHook]);
+
+  // Mettre à jour une commande après modification
   const handleUpdateOrder = (idOrder: string, updatedData: any) => {
     setOrders((prevOrders) =>
       prevOrders.map((order) =>
@@ -63,8 +81,8 @@ export default function ListeOrderScreen() {
         data={orders}
         keyExtractor={(item) => item.idOrder}
         renderItem={({ item }) => {
-          const mission = missionMap.get(item.idOrder);
-
+          const mission = missions[item.idOrder];
+          console.log(mission);
           if (editingOrderId === item.idOrder) {
             return (
               <EditOrderForm

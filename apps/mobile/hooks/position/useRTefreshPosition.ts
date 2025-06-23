@@ -1,4 +1,3 @@
-// hooks/useActualiserPositionTracking.ts
 import { useTrackingPositions } from "../tracking/useTrackingPositions";
 import { demanderLocalisation } from "../../utils/localisation";
 

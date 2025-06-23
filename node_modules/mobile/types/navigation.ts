@@ -10,4 +10,6 @@ export type RootStackParamList = {
   CreateMission: undefined;
   Orders: undefined;
   Subscription: undefined;
+  Role: undefined;
+  Rating: { userName: string };
 };
