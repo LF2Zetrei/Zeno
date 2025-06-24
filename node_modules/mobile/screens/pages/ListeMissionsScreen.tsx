@@ -1,29 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, FlatList, Button } from "react-native";
+import Slider from "@react-native-community/slider";
 import { useMissions } from "../../hooks/mission/useMissions";
 import { useMyMissions } from "../../hooks/mission/useMyMissions";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
 import AcceptMissionButton from "../../components/AcceptMissionButton";
 import UnassignMissionButton from "../../components/UnassignMissionButton";
 import { useMissionState } from "../../hooks/mission/useMissionState";
+import { useNearbyMissions } from "../../hooks/mission/getMissionsNearby";
 
 export default function MissionsScreen() {
   const { missions: missionsFromHook, loading: loadingMissions } =
     useMissions();
   const { missions: myMissions, loading: loadingMyMissions } = useMyMissions();
   const { user, loading: loadingUser } = useUserByJwt();
-  const [showMyMissions, setShowMyMissions] = useState(false);
   const { updateMissionStatus, loading, error, success } = useMissionState();
 
   const [missions, setMissions] = useState([]);
+  const [showMyMissions, setShowMyMissions] = useState(false);
+  const [showNearbyMissions, setShowNearbyMissions] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(10);
+
+  const {
+    missions: nearbyMissions,
+    loading: loadingNearby,
+    error: errorNearby,
+  } = useNearbyMissions(radiusKm);
 
   useEffect(() => {
     setMissions(missionsFromHook);
   }, [missionsFromHook]);
-
-  if (loadingMissions || loadingMyMissions || loadingUser) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
 
   const handleValidatingMisson = async (missionId) => {
     await updateMissionStatus(missionId, "COMPLETED");
@@ -59,7 +65,10 @@ export default function MissionsScreen() {
     );
   };
 
-  // 🔁 Si showMyMissions est activé → on affiche uniquement mes missions
+  if (loadingMissions || loadingMyMissions || loadingUser) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
   if (showMyMissions) {
     return (
       <View style={{ padding: 20 }}>
@@ -116,17 +125,78 @@ export default function MissionsScreen() {
     );
   }
 
-  // Sinon → comportement habituel selon le rôle
-  if (user.role === "USER") {
-    return (
-      <View style={{ padding: 20 }}>
-        <Button
-          title="Afficher mes missions"
-          onPress={() => setShowMyMissions(true)}
-        />
-        {missions.length === 0 ? (
-          <Text>Aucune mission trouvée</Text>
-        ) : (
+  // Affichage pour tous les rôles (USER ou DELIVER)
+  return (
+    <View style={{ padding: 20 }}>
+      <Button
+        title="Afficher mes missions"
+        onPress={() => setShowMyMissions(true)}
+      />
+
+      <Button
+        title={
+          showNearbyMissions
+            ? "Cacher les missions proches"
+            : "Afficher les missions proches"
+        }
+        onPress={() => setShowNearbyMissions(!showNearbyMissions)}
+      />
+
+      {showNearbyMissions && (
+        <View style={{ marginVertical: 15 }}>
+          <Text>Rayon de recherche : {radiusKm} km</Text>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={1}
+            maximumValue={200}
+            step={1}
+            value={radiusKm}
+            onValueChange={setRadiusKm}
+            minimumTrackTintColor="#1EB1FC"
+            maximumTrackTintColor="#d3d3d3"
+            thumbTintColor="#1EB1FC"
+          />
+          {loadingNearby ? (
+            <ActivityIndicator />
+          ) : errorNearby ? (
+            <Text style={{ color: "red" }}>{errorNearby}</Text>
+          ) : nearbyMissions.length === 0 ? (
+            <Text>Aucune mission à proximité</Text>
+          ) : (
+            <FlatList
+              data={nearbyMissions}
+              keyExtractor={(item) => item.idMission}
+              renderItem={({ item }) => (
+                <View
+                  style={{
+                    marginBottom: 15,
+                    padding: 10,
+                    backgroundColor: "#f0f0f0",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                    Mission : {item.idMission}
+                  </Text>
+                  <Text>Commande : {item.orderId}</Text>
+                  <Text>Statut : {item.status}</Text>
+                  <Text>
+                    Créée le : {new Date(item.createdAt).toLocaleDateString()}
+                  </Text>
+                  {item.travelerPseudo && (
+                    <Text>Voyageur : {item.travelerPseudo}</Text>
+                  )}
+                </View>
+              )}
+            />
+          )}
+        </View>
+      )}
+
+      {!showNearbyMissions && missions.length === 0 ? (
+        <Text>Aucune mission trouvée</Text>
+      ) : (
+        !showNearbyMissions && (
           <FlatList
             data={missions}
             keyExtractor={(item) => item.idMission}
@@ -168,49 +238,8 @@ export default function MissionsScreen() {
               </>
             )}
           />
-        )}
-      </View>
-    );
-  }
-
-  if (user.role === "DELIVER") {
-    return (
-      <View style={{ padding: 20 }}>
-        <Button
-          title="Afficher mes missions"
-          onPress={() => setShowMyMissions(true)}
-        />
-        {missions.length === 0 ? (
-          <Text>Aucune mission trouvée</Text>
-        ) : (
-          <FlatList
-            data={missions}
-            keyExtractor={(item) => item.idMission}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  marginBottom: 15,
-                  padding: 10,
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                  Mission : {item.idMission}
-                </Text>
-                <Text>Commande : {item.orderId}</Text>
-                <Text>Statut : {item.status}</Text>
-                <Text>
-                  Créée le : {new Date(item.createdAt).toLocaleDateString()}
-                </Text>
-                {item.travelerPseudo && (
-                  <Text>Voyageur : {item.travelerPseudo}</Text>
-                )}
-              </View>
-            )}
-          />
-        )}
-      </View>
-    );
-  }
+        )
+      )}
+    </View>
+  );
 }
