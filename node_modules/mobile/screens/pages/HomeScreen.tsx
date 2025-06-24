@@ -13,6 +13,7 @@ import LogoutButton from "../../components/LogoutButton";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
 import { useMissions } from "../../hooks/mission/useMissions";
 import { useTrackingAutomatique } from "../../hooks/position/useRefreshPositionAuto";
+import { useTrackingUserAutomatique } from "../../hooks/position/useRefreshUserPositionAuto.";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Accueil">;
 
@@ -27,6 +28,7 @@ export default function HomeScreen({ navigation }: Props) {
   const missionIds = missionsFiltrees.map((mission) => mission.idMission);
 
   useTrackingAutomatique(missionIds);
+  useTrackingUserAutomatique();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

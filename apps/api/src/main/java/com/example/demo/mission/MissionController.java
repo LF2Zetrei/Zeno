@@ -28,6 +28,13 @@ public class MissionController {
         return ResponseEntity.ok(missionService.updateMissionStatus(missionId, status));
     }
 
+    @GetMapping("/nearby")
+    public ResponseEntity<List<MissionResponse>> getNearbyMissions(@RequestHeader("Authorization") String authHeader, @RequestParam Float radiusKm) {
+        User user = userService.getUserByJwt(authHeader);
+        List<MissionResponse> missions = missionService.getMissionsNearby(user, radiusKm);
+        return ResponseEntity.ok(missions);
+    }
+
     @GetMapping("/{missionId}/status")
     public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
         return ResponseEntity.ok(missionService.getMissionStatus(missionId));

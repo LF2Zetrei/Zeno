@@ -13,7 +13,15 @@ public class MissionResponse {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Boolean isPublic;
 
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
     public UUID getIdMission() {
         return idMission;
     }

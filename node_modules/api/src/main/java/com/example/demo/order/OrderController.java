@@ -1,7 +1,9 @@
 package com.example.demo.order;
 
 import com.example.demo.mission.Mission;
+import com.example.demo.mission.MissionMapper;
 import com.example.demo.mission.MissionResponse;
+import com.example.demo.mission.MissionService;
 import com.example.demo.product.Product;
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
@@ -21,11 +23,13 @@ public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
     private final OrderRepository orderRepository;
+    private final MissionService missionService;
 
-    public OrderController(OrderService orderService, UserService userService, OrderRepository orderRepository) {
+    public OrderController(OrderService orderService, UserService userService, OrderRepository orderRepository, MissionService missionService) {
         this.orderService = orderService;
         this.userService = userService;
         this.orderRepository = orderRepository;
+        this.missionService = missionService;
     }
 
     @PostMapping("/create")
@@ -54,8 +58,8 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}/mission")
-    public ResponseEntity<Mission> getMissionByOrderId(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader) {
-        Mission mission = orderService.getMissionByOrderId(orderId);
+    public ResponseEntity<MissionResponse> getMissionByOrderId(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader) {
+        MissionResponse mission = MissionMapper.toDto(orderService.getMissionByOrderId(orderId));
         return ResponseEntity.ok(mission);
     }
     @PutMapping("/{orderId}")

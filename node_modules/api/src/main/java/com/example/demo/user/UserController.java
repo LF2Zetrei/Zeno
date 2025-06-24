@@ -41,7 +41,12 @@ public class UserController {
 
         return ResponseEntity.ok(user);
     }
-
+    @PutMapping("/position")
+    public ResponseEntity<?> updatePosition(@RequestHeader("Authorization") String authHeader, @RequestParam Double latitude, @RequestParam Double longitude) {
+        User user = userService.getUserByJwt(authHeader);
+        userService.updateUserPosition(user, latitude, longitude);
+        return ResponseEntity.ok(user);
+    }
     @PutMapping("/update")
     public ResponseEntity<?> updateMyProfile(@RequestHeader("Authorization") String authHeader,
                                              @RequestBody UpdateUserRequest updateRequest) {

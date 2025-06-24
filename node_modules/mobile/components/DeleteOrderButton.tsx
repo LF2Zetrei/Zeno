@@ -10,7 +10,13 @@ import {
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 
-const DeleteOrderButton = ({ orderId }: { orderId: string }) => {
+const DeleteOrderButton = ({
+  orderId,
+  onDeleted,
+}: {
+  orderId: string;
+  onDeleted?: () => void;
+}) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -35,7 +41,7 @@ const DeleteOrderButton = ({ orderId }: { orderId: string }) => {
               if (!response.ok)
                 throw new Error("Erreur lors de la suppression");
 
-              Alert.alert("Succès", "Commande supprimée.");
+              if (onDeleted) onDeleted();
             } catch (error: any) {
               Alert.alert("Erreur", error.message);
             } finally {
@@ -62,3 +68,13 @@ const DeleteOrderButton = ({ orderId }: { orderId: string }) => {
 };
 
 export default DeleteOrderButton;
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 10,
+  },
+  warning: {
+    color: "#d11a2a",
+    marginBottom: 5,
+  },
+});

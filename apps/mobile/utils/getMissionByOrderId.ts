@@ -3,6 +3,8 @@ import Constants from "expo-constants";
 
 export async function getMissionByOrderId(orderId: string) {
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
+  console.log("[getMissionByOrderId] orderId:", orderId);
+  console.log("[getMissionByOrderId] API_URL:", API_URL);
 
   if (!orderId || !API_URL) return null;
 
@@ -16,13 +18,15 @@ export async function getMissionByOrderId(orderId: string) {
       },
     });
 
-    if (!res.ok) {
-      console.error("Erreur HTTP :", res.status);
+    const text = await res.text(); // ← pour voir la vraie réponse
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (err) {
+      console.error("❌ JSON.parse error", err);
+      console.error("❌ Contenu brut retourné :", text);
       return null;
     }
-
-    const data = await res.json();
-    return data;
   } catch (error) {
     console.error("Erreur lors de la récupération de la mission :", error);
     return null;

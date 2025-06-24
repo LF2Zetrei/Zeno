@@ -54,6 +54,11 @@ public class UserService {
         return userRepository.findAllByOrderByRatingAverageDesc();
     }
 
+    public void updateUserPosition(User user, Double longitude, Double latitude){
+        user.setLongitude(longitude);
+        user.setLatitude(latitude);
+        userRepository.save(user);
+    }
     public User updateUserProfile(User user, UpdateUserRequest updateRequest) {
         if (updateRequest.getFirstName() != null) user.setFirstName(updateRequest.getFirstName());
         if (updateRequest.getLastName() != null) user.setLastName(updateRequest.getLastName());
@@ -103,8 +108,8 @@ public class UserService {
             user.setRole(role);
             userRepository.save(user);
         }else {
-        throw new IllegalArgumentException("Role is invalid : " + role);
-    }
+            throw new IllegalArgumentException("Role is invalid : " + role);
+        }
 
     }
 

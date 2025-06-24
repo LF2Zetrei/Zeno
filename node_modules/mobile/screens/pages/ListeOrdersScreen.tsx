@@ -11,6 +11,7 @@ import { useOrders } from "../../hooks/order/useOrders";
 import EditOrderForm from "../../components/EditOrderForm";
 import PublishOrderButton from "../../components/PublishOrderButton";
 import { getMissionByOrderId } from "../../utils/getMissionByOrderId";
+import DeleteOrderButton from "../../components/DeleteOrderButton";
 
 export default function ListeOrderScreen() {
   const { orders: ordersFromHook, loading: loadingOrders } = useOrders();
@@ -121,18 +122,29 @@ export default function ListeOrderScreen() {
                 Créée le : {new Date(item.createdAt).toLocaleDateString()}
               </Text>
 
-              <Button
-                title="Modifier la commande"
-                onPress={() => setEditingOrderId(item.idOrder)}
-              />
               <Text>Mission isPublic : {String(mission?.isPublic)}</Text>
               {mission?.isPublic === false && (
-                <PublishOrderButton
-                  orderId={item.idOrder}
-                  onSuccess={() => {
-                    console.log("Mission publiée avec succès");
-                  }}
-                />
+                <>
+                  <Button
+                    title="Modifier la commande"
+                    onPress={() => setEditingOrderId(item.idOrder)}
+                  />
+                  <PublishOrderButton
+                    orderId={item.idOrder}
+                    onSuccess={() => {
+                      console.log("Mission publiée avec succès");
+                    }}
+                  />
+                  <DeleteOrderButton
+                    orderId={item.idOrder}
+                    onDeleted={() => {
+                      // Supprimer la commande de l'état local
+                      setOrders((prev) =>
+                        prev.filter((order) => order.idOrder !== item.idOrder)
+                      );
+                    }}
+                  />
+                </>
               )}
             </View>
           );
@@ -158,5 +170,12 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  container: {
+    marginTop: 10,
+  },
+  warning: {
+    color: "#d11a2a",
+    marginBottom: 5,
   },
 });
