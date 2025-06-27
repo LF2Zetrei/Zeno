@@ -17,28 +17,30 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id) {
-        return ResponseEntity.ok(productService.getProductById(id));
-    }
-
-    @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestHeader("Authorization") String authHeader, @RequestBody CreateProductRequest request) {
-        return ResponseEntity.ok(productService.createProduct(request));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id, @RequestBody CreateProductRequest request) {
-        return ResponseEntity.ok(productService.updateProduct(id, request));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ProductResponse> getProductById(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id) {
+        Product product = productService.getProductById(id);
+        return ResponseEntity.ok(ProductMapper.toResponse(product));
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestHeader("Authorization") String authHeader) {
+        List<Product> products = productService.getAllProducts();
+        List<ProductResponse> responses = products.stream()
+                .map(ProductMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
+
+    @PostMapping
+    public ResponseEntity<ProductResponse> createProduct(@RequestHeader("Authorization") String authHeader, @RequestBody CreateProductRequest request) {
+        Product product = productService.createProduct(request);
+        return ResponseEntity.ok(ProductMapper.toResponse(product));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> updateProduct(@RequestHeader("Authorization") String authHeader, @PathVariable UUID id, @RequestBody CreateProductRequest request) {
+        Product product = productService.updateProduct(id, request);
+        return ResponseEntity.ok(ProductMapper.toResponse(product));
+    }
+
 }
