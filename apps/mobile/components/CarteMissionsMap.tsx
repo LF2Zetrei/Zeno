@@ -1,39 +1,51 @@
-// components/CarteMissionsMap.tsx
-
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { getOrderById } from "../utils/getOrderById";
+import { getTrackingPositionsByMissions } from "../utils/getTrackingPositions";
 
-export default function CarteMissionsMap({ missions, initialRegion }) {
+export default function CarteMissionsMap({
+  missions,
+  initialRegion,
+  trackingMode,
+}) {
   const [ordersMap, setOrdersMap] = useState(new Map());
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [selectedMission, setSelectedMission] = useState(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       if (!missions || missions.length === 0) return;
 
       setLoadingOrders(true);
       const newMap = new Map();
 
-      for (const mission of missions) {
-        const order = await getOrderById(mission.orderId);
-        if (order) newMap.set(mission.idMission, order);
-      }
+      const fetchFunctions = missions.map(async (mission) => {
+        try {
+          const data = trackingMode
+            ? (await getTrackingPositionsByMissions([mission]))[0]?.positions
+            : await getOrderById(mission.orderId);
+          if (data) {
+            newMap.set(mission.idMission, data);
+          }
+        } catch (error) {
+          console.error(`Erreur pour la mission ${mission.idMission} :`, error);
+        }
+      });
 
+      await Promise.all(fetchFunctions);
       setOrdersMap(newMap);
       setLoadingOrders(false);
     };
 
-    fetchOrders();
-  }, [missions]);
+    fetchData();
+  }, [missions, trackingMode]);
 
   if (loadingOrders) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" />
-        <Text>Chargement des commandes associées...</Text>
+        <Text>Chargement des données associées...</Text>
       </View>
     );
   }
@@ -52,21 +64,22 @@ export default function CarteMissionsMap({ missions, initialRegion }) {
         }
       >
         {missions.map((mission) => {
-          const order = ordersMap.get(mission.idMission);
-          if (!order || !order.latitude || !order.longitude) return null;
+          const data = ordersMap.get(mission.idMission);
+          if (!data || !data.latitude || !data.longitude) return null;
 
           return (
             <Marker
               key={mission.idMission}
               coordinate={{
-                latitude: order.latitude,
-                longitude: order.longitude,
+                latitude: data.latitude,
+                longitude: data.longitude,
               }}
-              onPress={() => setSelectedMission({ mission, order })}
+              onPress={() => setSelectedMission({ mission, data })}
             >
               <Callout>
                 <Text>Mission ID: {mission.idMission}</Text>
-                <Text>Commande ID: {order.idOrder}</Text>
+                {!trackingMode && <Text>Commande ID: {data.idOrder}</Text>}
+                {trackingMode && <Text>Position trackée</Text>}
               </Callout>
             </Marker>
           );
@@ -82,18 +95,31 @@ export default function CarteMissionsMap({ missions, initialRegion }) {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            {selectedMission && selectedMission.order ? (
+            {selectedMission && selectedMission.data && (
               <>
                 <Text style={styles.modalTitle}>
                   Mission ID : {selectedMission.mission.idMission}
                 </Text>
-                <Text>Artisan : {selectedMission.order.artisanName}</Text>
-                <Text>Adresse : {selectedMission.order.purchaseAddress}</Text>
-                <Text>Ville : {selectedMission.order.city}</Text>
-                <Text>Deadline : {selectedMission.order.deadline}</Text>
-                <Text>
-                  Prix estimé : {selectedMission.order.priceEstimation} €
-                </Text>
+
+                {!trackingMode ? (
+                  <>
+                    <Text>Artisan : {selectedMission.data.artisanName}</Text>
+                    <Text>
+                      Adresse : {selectedMission.data.purchaseAddress}
+                    </Text>
+                    <Text>Ville : {selectedMission.data.city}</Text>
+                    <Text>Deadline : {selectedMission.data.deadline}</Text>
+                    <Text>
+                      Prix estimé : {selectedMission.data.priceEstimation} €
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text>Position actuelle :</Text>
+                    <Text>Latitude : {selectedMission.data.latitude}</Text>
+                    <Text>Longitude : {selectedMission.data.longitude}</Text>
+                  </>
+                )}
 
                 <Text
                   style={styles.closeText}
@@ -102,7 +128,7 @@ export default function CarteMissionsMap({ missions, initialRegion }) {
                   Fermer
                 </Text>
               </>
-            ) : null}
+            )}
           </View>
         </View>
       </Modal>
