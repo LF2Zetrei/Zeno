@@ -17,6 +17,7 @@
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/drawer": "^7.5.1",
     "@react-navigation/native": "^7.1.9",
+    "@stripe/stripe-react-native": "^0.48.0",
     "dotenv": "^16.5.0",
     "expo": "~53.0.9",
     "expo-constants": "^17.1.6",

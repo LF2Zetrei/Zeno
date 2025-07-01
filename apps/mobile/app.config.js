@@ -7,6 +7,9 @@ export default {
     version: "1.0.0",
     extra: {
       apiUrl: process.env.API_URL,
+      merchantId: process.env.MERCHANT_ID,
+      publicKey: process.env.PUBLIC_KEY,
+      merchantDisplayName: process.env.MERCHANT_DISPLAY_NAME,
     },
   },
 };

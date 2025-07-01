@@ -10,6 +10,7 @@ import {
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUserByJwt } from "../hooks/user/getUserByJwt";
+import { useStripe } from "@stripe/stripe-react-native";
 
 const SubscriptionSelector = () => {
   const { user, loading: userLoading } = useUserByJwt();
@@ -18,6 +19,7 @@ const SubscriptionSelector = () => {
 
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   useEffect(() => {
     if (user && !localUser) {
       setLocalUser(user);
@@ -45,6 +47,35 @@ const SubscriptionSelector = () => {
           const token = await AsyncStorage.getItem("token");
 
           try {
+            // Si c’est un abonnement payant
+            if (action === "subscribe") {
+              const paymentRoute =
+                subscriptionType === "premium" ? "premiumPass" : "classicPass";
+
+              const res = await fetch(`${API_URL}payment/${paymentRoute}`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              const { clientSecret } = await res.json();
+              const merchantDisplayName =
+                Constants.expoConfig?.extra?.merchantDisplayName || "Zeno";
+              const { error: initError } = await initPaymentSheet({
+                paymentIntentClientSecret: clientSecret,
+                merchantDisplayName,
+              });
+
+              if (initError) throw new Error(initError.message);
+
+              const { error: paymentError } = await presentPaymentSheet();
+
+              if (paymentError) throw new Error(paymentError.message);
+            }
+
+            // Appel API pour activer ou désactiver l’abonnement
             const response = await fetch(
               `${API_URL}user/subscription?subscriptionType=${subscriptionType}`,
               {

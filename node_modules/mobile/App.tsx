@@ -17,6 +17,8 @@ import ListeOrderScreen from "./screens/pages/ListeOrdersScreen";
 import SubscriptionScreen from "./screens/pages/SubscriptionScreen";
 import RoleScreen from "./screens/pages/RoleScreen";
 import UserRatingScreen from "./screens/pages/UserRatingScreen";
+import { StripeProvider } from "@stripe/stripe-react-native";
+import Constants from "expo-constants";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -58,11 +60,18 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const MERCHANT_ID = Constants.expoConfig?.extra?.merchantId;
+  const PUBLIC_KEY = Constants.expoConfig?.extra?.publicKey;
   return (
-    <AuthProvider>
-      <NavigationContainer>
-        <AppRoutes />
-      </NavigationContainer>
-    </AuthProvider>
+    <StripeProvider
+      publishableKey={PUBLIC_KEY}
+      merchantIdentifier={MERCHANT_ID}
+    >
+      <AuthProvider>
+        <NavigationContainer>
+          <AppRoutes />
+        </NavigationContainer>
+      </AuthProvider>
+    </StripeProvider>
   );
 }
