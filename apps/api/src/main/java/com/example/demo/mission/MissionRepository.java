@@ -14,4 +14,6 @@ public interface MissionRepository extends JpaRepository<Mission, UUID> {
     Optional<Mission> findByOrder_IdOrder(UUID orderId);
     Optional<Mission> findByIdMission(UUID id);
     Optional<Mission> findByOrder(Order order);
+
+    Order order(Order order);
 }

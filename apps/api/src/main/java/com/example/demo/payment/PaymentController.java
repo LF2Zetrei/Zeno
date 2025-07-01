@@ -2,6 +2,8 @@ package com.example.demo.payment;
 
 import com.example.demo.mission.Mission;
 import com.example.demo.mission.MissionRepository;
+import com.example.demo.order.Order;
+import com.example.demo.order.OrderRepository;
 import com.example.demo.stripe.StripeService;
 import com.stripe.exception.StripeException;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +20,14 @@ public class PaymentController {
     private final StripeService stripeService;
     private final PaymentRepository paymentRepository;
     private final MissionRepository missionRepository;
+    private final OrderRepository orderRepository;
 
-    public PaymentController(PaymentService paymentService, StripeService stripeService, PaymentRepository paymentRepository, MissionRepository missionRepository) {
+    public PaymentController(PaymentService paymentService, StripeService stripeService, PaymentRepository paymentRepository, MissionRepository missionRepository, OrderRepository orderRepository) {
         this.paymentService = paymentService;
         this.stripeService = stripeService;
         this.paymentRepository = paymentRepository;
         this.missionRepository = missionRepository;
+        this.orderRepository = orderRepository;
     }
 
     private final Double classic_pass = 17.99;
@@ -81,9 +85,10 @@ public class PaymentController {
         return Map.of("clientSecret", clientSecret);
     }
 
-    @PostMapping("/pay_mission/{missionId}")
-    public Map<String, String> createPayment(@RequestHeader("Authorization") String authHeader, @PathVariable UUID missionId) {
-        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+    @PostMapping("/pay_mission/{orderId}")
+    public Map<String, String> createPayment(@RequestHeader("Authorization") String authHeader, @PathVariable UUID orderId) {
+        Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() ->  new RuntimeException("Order non trouvé"));
+        Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission non trouvée"));
         Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment non trouvée"));
         String clientSecret = null;
         if (payment.getAmount() != null) {
