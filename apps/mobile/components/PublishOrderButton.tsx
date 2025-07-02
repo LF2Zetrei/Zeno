@@ -30,19 +30,23 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
 
     try {
       const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
+      console.log("API_URL:", API_URL);
+      console.log("orderId:", orderId);
       // 1. Appel à /pay_mission/{orderId}
-      const res = await fetch(`${API_URL}pay_mission/${orderId}`, {
+      console.log("👉 Étape 1: Appel à /pay_mission");
+
+      const res = await fetch(`${API_URL}payment/pay_mission/${orderId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+      console.log("✅ Réponse de /pay_mission :", res.status);
       if (!res.ok) throw new Error("Échec de l'initialisation du paiement.");
 
       const { clientSecret } = await res.json();
-
+      console.log("🔑 clientSecret reçu :", clientSecret);
+      const chalk = require("chalk");
       // 2. Initialiser le PaymentSheet
       const merchantDisplayName =
         Constants.expoConfig?.extra?.merchantDisplayName || "Zeno";
@@ -52,7 +56,10 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
         merchantDisplayName,
       });
 
-      if (initError) throw new Error(initError.message);
+      if (initError) {
+        console.log("Stripe initPaymentSheet error:", initError);
+        throw new Error(initError.message);
+      }
 
       // 3. Présenter le PaymentSheet
       const { error: paymentError } = await presentPaymentSheet();
@@ -74,6 +81,7 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
       Alert.alert("Succès", "Commande validée et rendue publique.");
       onSuccess?.();
     } catch (error: any) {
+      console.error("❌ Erreur dans handlePublishOrder :", error);
       Alert.alert("Erreur", error.message || "Une erreur est survenue.");
     } finally {
       setLoading(false);
