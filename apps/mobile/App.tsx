@@ -19,6 +19,8 @@ import RoleScreen from "./screens/pages/RoleScreen";
 import UserRatingScreen from "./screens/pages/UserRatingScreen";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import Constants from "expo-constants";
+import * as Linking from "expo-linking";
+import { useEffect } from "react";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -62,6 +64,25 @@ function AppRoutes() {
 export default function App() {
   const MERCHANT_ID = Constants.expoConfig?.extra?.merchantId;
   const PUBLIC_KEY = Constants.expoConfig?.extra?.publicKey;
+
+  useEffect(() => {
+    const handleDeepLink = (event: Linking.EventType) => {
+      const url = event.url;
+      const parsed = Linking.parse(url);
+      const sessionId = parsed.queryParams?.session_id;
+
+      if (sessionId) {
+        console.log("Stripe verification session ID:", sessionId);
+        // Tu peux appeler ton API ici
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <StripeProvider
       publishableKey={PUBLIC_KEY}

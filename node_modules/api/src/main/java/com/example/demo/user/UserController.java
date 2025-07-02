@@ -85,4 +85,12 @@ public class UserController {
         return ResponseEntity.ok("User deleted successfully");
     }
 
+    @PutMapping("/validate-identity")
+    public ResponseEntity<?> validateIdentity(@RequestHeader("Authorization") String authHeader) {
+        User user = userService.getUserByJwt(authHeader);
+        user.setIdentityCardUrl("validé");
+        userRepository.save(user);
+        return ResponseEntity.ok().build();
+    }
+
 }

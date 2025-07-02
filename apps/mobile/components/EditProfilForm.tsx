@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
+import * as WebBrowser from "expo-web-browser";
 
 interface EditProfileFormProps {
   initialData: {
@@ -50,6 +51,54 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
     if (!result.canceled && result.assets?.[0]) {
       setIdentityDoc(result.assets[0]);
+    }
+  };
+
+  const validateIdentityWithAPI = async () => {
+    try {
+      const response = await fetch(`${API_URL}user/validate-identity`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Échec de la mise à jour du statut d'identité.");
+      }
+
+      Alert.alert("Succès", "Identité vérifiée avec succès !");
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message || "Impossible de valider.");
+    }
+  };
+
+  const handleStripeIdentityVerification = async () => {
+    try {
+      const response = await fetch(`${API_URL}stripe/identity-session`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Impossible de démarrer la vérification d'identité.");
+      }
+
+      const data = await response.json();
+      const identityUrl = data.url;
+
+      // Ouvre Stripe Identity dans un navigateur sécurisé
+      const result = await WebBrowser.openBrowserAsync(identityUrl);
+
+      // Optionnel : écoute une redirection pour savoir si c'est terminé
+      // ou demande à l’utilisateur de revenir dans l’app
+
+      // Une fois terminé (ex. bouton "J'ai fini"), on confirme la vérif
+      await validateIdentityWithAPI();
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message || "Échec de la vérification.");
     }
   };
 
@@ -124,12 +173,10 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
       <TouchableOpacity
         style={styles.identityButton}
-        onPress={pickIdentityDocument}
+        onPress={handleStripeIdentityVerification}
       >
         <Text style={styles.identityButtonText}>
-          {identityDoc
-            ? "Pièce sélectionnée ✅"
-            : "Joindre une pièce d'identité"}
+          Vérifier ma pièce d’identité via Stripe
         </Text>
       </TouchableOpacity>
 
