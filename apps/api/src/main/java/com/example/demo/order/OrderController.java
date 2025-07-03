@@ -5,6 +5,8 @@ import com.example.demo.mission.MissionMapper;
 import com.example.demo.mission.MissionResponse;
 import com.example.demo.mission.MissionService;
 import com.example.demo.product.Product;
+import com.example.demo.product.ProductMapper;
+import com.example.demo.product.ProductResponse;
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
 import jakarta.validation.Valid;
@@ -131,9 +133,13 @@ public class OrderController {
     }
 
     @GetMapping("{orderId}/products")
-    public ResponseEntity<List<Product>> getProductsInOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<List<ProductResponse>> getProductsInOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
         String jwt = extractToken(authHeader);
-        return ResponseEntity.ok(orderService.getProductsInOrder(orderId));
+        List<Product> products = orderService.getProductsInOrder(orderId);
+        List<ProductResponse> responses = products.stream()
+                .map(ProductMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 }
 

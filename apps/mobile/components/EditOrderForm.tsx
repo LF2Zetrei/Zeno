@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../context/AuthContext";
+import { useProductsInOrder } from "../hooks/order/getProductsByOrder";
+import DeleteProductFromOrderButton from "./DeleteProductFromOrderButton";
 
 interface EditOrderFormProps {
   orderId: string;
@@ -29,8 +31,8 @@ const EditOrderForm = ({
 }: EditOrderFormProps) => {
   const [form, setForm] = useState(initialData);
   const { token } = useAuth();
+  const { products, loading } = useProductsInOrder(orderId);
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm({ ...form, [field]: value });
   };
@@ -104,6 +106,28 @@ const EditOrderForm = ({
         />
       </View>
 
+      <View style={styles.productsContainer}>
+        <Text style={styles.subtitle}>Produits dans la commande</Text>
+
+        {loading ? (
+          <Text>Chargement des produits...</Text>
+        ) : products.length === 0 ? (
+          <Text>Aucun produit dans cette commande.</Text>
+        ) : (
+          products.map((product) => (
+            <View key={product.id} style={styles.productItem}>
+              <Text style={styles.productText}>
+                {product.name || "Produit"} - {product.price} €
+              </Text>
+              <DeleteProductFromOrderButton
+                orderId={orderId}
+                productId={product.idProduct}
+              />
+            </View>
+          ))
+        )}
+      </View>
+
       <Button title="Enregistrer les modifications" onPress={handleSubmit} />
     </ScrollView>
   );
@@ -131,6 +155,29 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     padding: 8,
+  },
+  productsContainer: {
+    marginVertical: 16,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  productItem: {
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  productText: {
+    fontSize: 14,
+    marginBottom: 4,
   },
 });
 

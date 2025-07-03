@@ -12,10 +12,11 @@ import EditOrderForm from "../../components/EditOrderForm";
 import PublishOrderButton from "../../components/PublishOrderButton";
 import { getMissionByOrderId } from "../../utils/getMissionByOrderId";
 import DeleteOrderButton from "../../components/DeleteOrderButton";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ListeOrderScreen() {
   const { orders: ordersFromHook, loading: loadingOrders } = useOrders();
-
+  const navigation = useNavigation();
   const [orders, setOrders] = useState([]);
   const [missions, setMissions] = useState<Record<string, any>>({});
   const [loadingMissions, setLoadingMissions] = useState(true);
@@ -125,6 +126,14 @@ export default function ListeOrderScreen() {
               <Text>Mission isPublic : {String(mission?.isPublic)}</Text>
               {mission?.isPublic === false && (
                 <>
+                  <Button
+                    title="Ajouter un produit"
+                    onPress={() =>
+                      navigation.navigate("CreateMission", {
+                        orderId: item.idOrder, // 👈 On passe l'id
+                      })
+                    }
+                  />
                   <Button
                     title="Modifier la commande"
                     onPress={() => setEditingOrderId(item.idOrder)}

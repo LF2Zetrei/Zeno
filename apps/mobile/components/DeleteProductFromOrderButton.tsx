@@ -34,6 +34,7 @@ const DeleteProductFromOrderButton = ({
             try {
               const API_URL = Constants.expoConfig?.extra?.apiUrl;
               const url = `${API_URL}order/${orderId}/product/${productId}`;
+              console.log(url);
               const response = await fetch(url, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
@@ -69,3 +70,17 @@ const DeleteProductFromOrderButton = ({
 };
 
 export default DeleteProductFromOrderButton;
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#ffe6e6",
+    borderRadius: 8,
+  },
+  warning: {
+    color: "#d11a2a",
+    marginBottom: 8,
+    fontWeight: "bold",
+  },
+});
