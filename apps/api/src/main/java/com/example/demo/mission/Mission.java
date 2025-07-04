@@ -45,6 +45,28 @@ public class Mission {
     @Column(name = "public")
     private Boolean isPublic;
 
+    @Column(name = "mission_delivered")
+    private Boolean missionDelivered;
+
+    @Column(name = "mission_received")
+    private Boolean missionReceived;
+
+    public Boolean getMissionDelivered() {
+        return missionDelivered;
+    }
+
+    public Boolean getMissionReceived() {
+        return missionReceived;
+    }
+
+    public void setMissionReceived(Boolean missionReceived) {
+        this.missionReceived = missionReceived;
+    }
+
+    public void setMissionDelivered(Boolean missionDelivered) {
+        this.missionDelivered = missionDelivered;
+    }
+
     public Boolean getIsPublic() {
         return isPublic;
     }

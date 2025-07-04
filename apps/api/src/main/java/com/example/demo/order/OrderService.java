@@ -81,6 +81,8 @@ public class OrderService {
         mission.setUpdatedAt(LocalDateTime.now());
         mission.setStatus(MissionStatus.PENDING);
         mission.setIsPublic(false);
+        mission.setMissionDelivered(false);
+        mission.setMissionReceived(false);
         missionRepository.save(mission);
 
         Tracking tracking = new Tracking();
