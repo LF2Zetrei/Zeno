@@ -82,6 +82,18 @@ public class User {
     @Column(name="latitude")
     private Double latitude;
 
+    @Column(name = "stripe_account_id")
+    private String stripeAccountId;
+
+    // getter & setter
+    public String getStripeAccountId() {
+        return stripeAccountId;
+    }
+
+    public void setStripeAccountId(String stripeAccountId) {
+        this.stripeAccountId = stripeAccountId;
+    }
+
     public Double getLatitude() {
         return latitude;
     }
