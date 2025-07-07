@@ -62,8 +62,17 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
+    @Column(name="transports")
+    private String transports;
+
     // getter et setter pour orderProducts
 
+    public String getTransports() {
+        return transports;
+    }
+    public void setTransports(String transports) {
+        this.transports = transports;
+    }
 
     public String getCity() {
         return city;

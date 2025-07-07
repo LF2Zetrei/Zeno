@@ -9,11 +9,17 @@ public class OrderRequest {
         private String purchaseCountry;
         private LocalDate deadline;
         private String artisanName;
+        private String transports;
 
         // ✅ Assure-toi d’avoir une liste ici
         private List<UUID> productIds;
         private String city;
-
+        public String getTransports() {
+        return transports;
+        }
+        public void setTransports(String transports) {
+            this.transports = transports;
+        }
         public List<UUID> getProductIds() {
             return productIds;
         }

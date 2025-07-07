@@ -19,8 +19,17 @@ public class OrderResponse {
     private String city;
     private Float latitude;
     private Float longitude;
+    private String transports;
 
     // Getters & Setters
+
+    public String getTransports() {
+        return transports;
+    }
+
+    public void setTransports(String transports) {
+        this.transports = transports;
+    }
 
     public User getBuyer() {
         return buyer;
@@ -137,6 +146,12 @@ public class OrderResponse {
         private String city;
         private Float latitude;
         private Float longitude;
+        private String transports;
+
+        public Builder transports(String transports) {
+            this.transports = transports;
+            return this;
+        }
         public Builder idOrder(UUID idOrder) {
             this.idOrder = idOrder;
             return this;
@@ -210,6 +225,7 @@ return this; }
             response.setCity(this.city);
             response.setLatitude(this.latitude);
             response.setLongitude(this.longitude);
+            response.setTransports(this.transports);
        return response;
         }
     }

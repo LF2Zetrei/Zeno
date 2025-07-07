@@ -105,6 +105,12 @@ export default function CreateOrderForm({ onOrderCreated }: Props) {
         value={form.city}
         onChangeText={(text) => handleChange("city", text)}
       />
+      <TextInput
+        style={styles.input}
+        placeholder="Transports de livraisons autorisés : train, avion, voiture, bateau ...."
+        value={form.city}
+        onChangeText={(text) => handleChange("transports", text)}
+      />
 
       <Button title="Créer la commande" onPress={handleCreateOrder} />
     </ScrollView>

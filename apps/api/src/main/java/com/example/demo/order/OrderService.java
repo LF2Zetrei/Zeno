@@ -73,6 +73,7 @@ public class OrderService {
         order.setCity(request.getCity());
         order.setLatitude((float) coords[0]);
         order.setLongitude((float) coords[1]);
+        order.setTransports(request.getTransports());
         orderRepository.save(order);
 
         Mission mission = new Mission();
@@ -120,6 +121,7 @@ public class OrderService {
         order.setDeadline(request.getDeadline());
         order.setArtisanName(request.getArtisanName());
         order.setUpdatedAt(LocalDateTime.now());
+        order.setTransports(request.getTransports());
         orderRepository.save(order);
 
         Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));

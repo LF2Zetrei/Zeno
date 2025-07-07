@@ -1,2 +1,2 @@
 ALTER TABLE "order"
-    ADD COLUMN transport VARCHAR(30);
+    ADD COLUMN transports VARCHAR(200);
