@@ -84,64 +84,26 @@ public class PaymentController {
     }
 
     @PostMapping("/pay_mission/{orderId}")
-    public String createPayment(@RequestHeader("Authorization") String authHeader,
-                                @PathVariable UUID orderId) {
-        Order order = orderRepository.findByIdOrder(orderId)
-                .orElseThrow(() -> new RuntimeException("Order non trouvé"));
-
-        Mission mission = missionRepository.findByOrder(order)
-                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
-
-        Payment payment = paymentRepository.findByMission(mission)
-                .orElseThrow(() -> new RuntimeException("Payment non trouvée"));
-
-        if (payment.getAmount() == null) {
-            throw new RuntimeException("Montant du paiement manquant");
-        }
-
-        PaymentIntentResponse intentResponse = stripeService.createPaymentIntent(payment.getAmount());
-
-        // 🔒 On stocke l’ID Stripe
-        payment.setStripeId(intentResponse.getId());
-        payment.setStatus("CREATED");
-        payment.setUpdatedAt(LocalDateTime.now());
-        paymentRepository.save(payment);
-
-        // 🔁 On retourne toujours juste le clientSecret (comme avant)
-        return intentResponse.getClientSecret();
+    public ResponseEntity<String> createPayment(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable UUID orderId
+    ) {
+        String clientSecret = stripeService.createMissionPaymentIntent(orderId);
+        return ResponseEntity.ok(clientSecret);
     }
 
     @PostMapping("/{missionId}/transfer")
     public ResponseEntity<String> payDeliverer(
             @PathVariable UUID missionId,
-            @RequestHeader("Authorization") String authHeader) throws StripeException {
-
-        Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
-
-        User deliverer = mission.getTraveler(); // à adapter selon ton modèle
-
-        if (deliverer.getStripeAccountId() == null) {
-            stripeService.createConnectedAccountForUser(deliverer);
-        }
-
-        Payment payment = paymentRepository.findByMission(mission)
-                .orElseThrow(() -> new RuntimeException("Paiement non trouvé"));
-
-        if (!"SUCCEEDED".equals(payment.getStatus())) {
-            throw new RuntimeException("Paiement non encore validé");
-        }
-
-        // 💰 Montant à transférer : montant total - commission (par ex 10%)
-        long totalAmountCents = (long) (payment.getAmount() * 100);
-        long platformFee = (long) (totalAmountCents * 0.10); // 10% de taxe
-        long amountToSend = totalAmountCents - platformFee;
-
+            @RequestHeader("Authorization") String authHeader
+    ) {
         try {
-            stripeService.createTransferToUser(deliverer.getStripeAccountId(), amountToSend);
+            stripeService.transferToDeliverer(missionId);
             return ResponseEntity.ok("Transfert effectué avec succès");
         } catch (StripeException e) {
             return ResponseEntity.status(500).body("Erreur Stripe : " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body("Erreur : " + e.getMessage());
         }
     }
 

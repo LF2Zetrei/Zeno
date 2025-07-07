@@ -8,6 +8,7 @@ import AcceptMissionButton from "../../components/AcceptMissionButton";
 import UnassignMissionButton from "../../components/UnassignMissionButton";
 import { useMissionState } from "../../hooks/mission/useMissionState";
 import { useNearbyMissions } from "../../hooks/mission/getMissionsNearby";
+import DeliveredMissionButton from "../../components/button/DeliveredMissionButton";
 
 export default function MissionsScreen() {
   const { missions: missionsFromHook, loading: loadingMissions } =
@@ -103,10 +104,9 @@ export default function MissionsScreen() {
                   <Text>Voyageur : {item.travelerPseudo}</Text>
                 )}
                 {item.status != "COMPLETED" && (
-                  <Button
-                    title="Valider la mission"
-                    onPress={() => handleValidatingMisson(item.idMission)}
-                    disabled={loading}
+                  <DeliveredMissionButton
+                    missionId={item.idMission}
+                    onSuccess={() => handleValidatingMisson(item.idMission)}
                   />
                 )}
                 {error && (

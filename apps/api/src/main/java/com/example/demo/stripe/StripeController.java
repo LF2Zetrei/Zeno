@@ -34,18 +34,13 @@ public class StripeController {
     }
 
     @PostMapping("/create_stripe_account")
-    public String createStripeAccount(@RequestHeader("Authorization") String authHeader) {
-        User user = userService.getUserByJwt(authHeader);
-
-        if (user.getStripeAccountId() != null) {
-            return "Compte Stripe déjà créé : " + user.getStripeAccountId();
-        }
-
+    public ResponseEntity<?> createStripeAccount(@RequestHeader("Authorization") String authHeader) {
         try {
-            String accountId = stripeService.createConnectedAccountForUser(user);
-            return "Compte Stripe connecté créé : " + accountId;
+            User user = userService.getUserByJwt(authHeader);
+            String result = stripeService.handleStripeAccountCreation(user);
+            return ResponseEntity.ok(Map.of("message", result));
         } catch (StripeException e) {
-            throw new RuntimeException("Erreur lors de la création du compte Stripe", e);
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 

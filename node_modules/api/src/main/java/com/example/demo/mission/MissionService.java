@@ -5,11 +5,13 @@ import com.example.demo.order.Order;
 import com.example.demo.order.OrderRepository;
 import com.example.demo.payment.Payment;
 import com.example.demo.payment.PaymentRepository;
+import com.example.demo.stripe.StripeService;
 import com.example.demo.tracking.Tracking;
 import com.example.demo.tracking.TrackingRepository;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
+import com.stripe.exception.StripeException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -29,12 +31,13 @@ public class MissionService {
     private final UserService userService;
     private final TrackingRepository trackingRepository;
     private final PaymentRepository paymentRepository;
+    private final StripeService stripeService;
 
     public MissionService(MissionRepository missionRepository,
                           OrderRepository orderRepository,
                           UserRepository userRepository,
                           JwtUtils jwtUtil,
-                          UserService userService, TrackingRepository trackingRepository, PaymentRepository paymentRepository) {
+                          UserService userService, TrackingRepository trackingRepository, PaymentRepository paymentRepository, StripeService stripeService) {
         this.missionRepository = missionRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -42,6 +45,7 @@ public class MissionService {
         this.userService = userService;
         this.trackingRepository = trackingRepository;
         this.paymentRepository = paymentRepository;
+        this.stripeService = stripeService;
     }
 
     public MissionResponse createMissionFromOrder(UUID orderId){
@@ -196,7 +200,7 @@ public class MissionService {
     public MissionResponse getMissionById(UUID missionId) {
         System.out.println("[getMissionById] Mission avec l'id : " + missionId);
         Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
-        System.out.println("[getMissionById] Mission récupérées : ");
+        System.out.println("[getMissionById] Mission récupérée : ");
         return MissionMapper.toDto(mission);
     }
 
@@ -215,4 +219,58 @@ public class MissionService {
         System.out.println("[haversine] Distance calculée : " + result + " km");
         return result;
     }
+
+    public void received(UUID missionId, User user) throws StripeException {
+        System.out.println("[received] Mission : " + missionId);
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        if (!Boolean.TRUE.equals(mission.getMissionReceived())) {
+            if ( mission.getOrder().getBuyer().getIdUser() == user.getIdUser() ) {
+                mission.setMissionReceived(true);
+                missionRepository.save(mission);
+                System.out.println("[received] Mission reçue. ");
+
+            } else {
+                System.out.println("[delivered] L'utilisateur n'a pas les droits");
+            }
+        } else {
+            if (mission.getOrder().getBuyer().getIdUser() == user.getIdUser()) {
+                mission.setMissionReceived(true);
+                missionRepository.save(mission);
+                System.out.println("[received] Mission reçue. ");
+                stripeService.transferToDeliverer(missionId);
+
+            } else {
+                System.out.println("[delivered] L'utilisateur n'a pas les droits");
+            }
+
+        }
+
+    }
+
+    public void delivered(UUID missionId, User user) throws StripeException {
+        System.out.println("[delivered] Mission : " + missionId);
+        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        if (!Boolean.TRUE.equals(mission.getMissionDelivered())) {
+            if (mission.getTraveler().getIdUser() == user.getIdUser()) {
+                mission.setMissionDelivered(true);
+                missionRepository.save(mission);
+                System.out.println("[delivered] Mission délivrée.");
+
+            } else {
+                System.out.println("[delivered] L'utilisateur n'a pas les droits.");
+            }
+        } else {
+            if (mission.getTraveler().getIdUser() == user.getIdUser()) {
+                mission.setMissionDelivered(true);
+                missionRepository.save(mission);
+                System.out.println("[delivered] Mission délivrée.");
+                stripeService.transferToDeliverer(missionId);
+            } else {
+                System.out.println("[delivered] L'utilisateur n'a pas les droits.");
+            }
+        }
+
+    }
+
+
 }

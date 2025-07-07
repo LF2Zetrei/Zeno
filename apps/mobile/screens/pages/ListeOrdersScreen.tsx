@@ -13,6 +13,7 @@ import PublishOrderButton from "../../components/PublishOrderButton";
 import { getMissionByOrderId } from "../../utils/getMissionByOrderId";
 import DeleteOrderButton from "../../components/DeleteOrderButton";
 import { useNavigation } from "@react-navigation/native";
+import ReceivedMissionButton from "../../components/button/ReceivedMissionButton";
 
 export default function ListeOrderScreen() {
   const { orders: ordersFromHook, loading: loadingOrders } = useOrders();
@@ -122,7 +123,14 @@ export default function ListeOrderScreen() {
               <Text>
                 Créée le : {new Date(item.createdAt).toLocaleDateString()}
               </Text>
-
+              {mission && mission.idMission && (
+                <ReceivedMissionButton
+                  missionId={mission.idMission}
+                  onSuccess={() => {
+                    console.log("Mission reçue !");
+                  }}
+                />
+              )}
               <Text>Mission isPublic : {String(mission?.isPublic)}</Text>
               {mission?.isPublic === false && (
                 <>

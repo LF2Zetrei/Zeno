@@ -26,6 +26,8 @@ public class MissionMapper {
         dto.setCreatedAt(mission.getCreatedAt());
         dto.setUpdatedAt(mission.getUpdatedAt());
         dto.setIsPublic(mission.getIsPublic());
+        dto.setisDelivered(mission.getMissionDelivered());
+        dto.setIsReceived(mission.getMissionReceived());
         return dto;
     }
 

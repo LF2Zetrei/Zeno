@@ -14,7 +14,21 @@ public class MissionResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isPublic;
+    private Boolean isDelivered;
+    private Boolean isReceived;
 
+    public Boolean getisDelivered() {
+        return isDelivered;
+    }
+    public void setisDelivered(Boolean isDelivered) {
+        this.isDelivered = isDelivered;
+    }
+    public Boolean getIsReceived() {
+        return isReceived;
+    }
+    public void setIsReceived(Boolean isReceived) {
+        this.isReceived = isReceived;
+    }
     public Boolean getIsPublic() {
         return isPublic;
     }

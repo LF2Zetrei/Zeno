@@ -2,6 +2,8 @@ package com.example.demo.mission;
 
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
+import com.stripe.exception.StripeException;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,5 +93,19 @@ public class MissionController {
                                                            @RequestHeader("Authorization") String authHeader) {
         User user = userService.getUserByJwt(authHeader);
         return ResponseEntity.ok(missionService.unAssignDeliver(missionId, user));
+    }
+
+    @PutMapping("/{missionId}/received")
+    public ResponseEntity<?> receivedMission(@PathVariable UUID missionId, @RequestHeader("Authorization") String authHeader) throws StripeException {
+        User user = userService.getUserByJwt(authHeader);
+        missionService.received(missionId, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{missionId}/delivered")
+    public ResponseEntity<?> deliveredMission(@PathVariable UUID missionId, @RequestHeader("Authorization") String authHeader) throws StripeException {
+        User user = userService.getUserByJwt(authHeader);
+        missionService.delivered(missionId, user);
+        return ResponseEntity.noContent().build();
     }
 }
