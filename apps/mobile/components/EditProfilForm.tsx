@@ -125,9 +125,9 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
-        body: formData,
+        body: JSON.stringify(form),
       });
 
       if (!response.ok) {
@@ -201,7 +201,7 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 50,
     gap: 16,
   },
   title: {

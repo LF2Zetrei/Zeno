@@ -198,30 +198,29 @@ export default function MissionsScreen() {
       ) : (
         !showNearbyMissions && (
           <FlatList
-            data={missions}
+            data={missions.filter((item) => item.travelerId === null)}
             keyExtractor={(item) => item.idMission}
             renderItem={({ item }) => (
-              <>
-                <View
-                  style={{
-                    marginBottom: 15,
-                    padding: 10,
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                    Mission : {item.idMission}
-                  </Text>
-                  <Text>Commande : {item.orderId}</Text>
-                  <Text>Statut : {item.status}</Text>
-                  <Text>
-                    Créée le : {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
-                  {item.travelerPseudo && (
-                    <Text>Voyageur : {item.travelerPseudo}</Text>
-                  )}
-                </View>
+              <View
+                style={{
+                  marginBottom: 15,
+                  padding: 10,
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                  Mission : {item.idMission}
+                </Text>
+                <Text>Commande : {item.orderId}</Text>
+                <Text>Statut : {item.status}</Text>
+                <Text>
+                  Créée le : {new Date(item.createdAt).toLocaleDateString()}
+                </Text>
+                {item.travelerPseudo && (
+                  <Text>Voyageur : {item.travelerPseudo}</Text>
+                )}
+
                 <Text>
                   {String(item.travelerId) === String(user.idUser) ? (
                     <UnassignMissionButton
@@ -235,7 +234,7 @@ export default function MissionsScreen() {
                     />
                   )}
                 </Text>
-              </>
+              </View>
             )}
           />
         )

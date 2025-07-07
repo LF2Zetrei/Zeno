@@ -32,8 +32,8 @@ const SubscriptionSelector = () => {
   ) => {
     const confirmText =
       action === "subscribe"
-        ? `Souhaitez-vous vous abonner à l'offre ${subscriptionType.toUpperCase()} ?`
-        : `Souhaitez-vous vous désabonner de l'offre ${subscriptionType.toUpperCase()} ?`;
+        ? `Souhaitez-vous acheter le pass ${subscriptionType.toUpperCase()} ?`
+        : `Souhaitez-vous vous retirer de l'offre ${subscriptionType.toUpperCase()} ?`;
 
     Alert.alert("Confirmation", confirmText, [
       {
@@ -47,7 +47,6 @@ const SubscriptionSelector = () => {
           const token = await AsyncStorage.getItem("token");
 
           try {
-            // Si c’est un abonnement payant
             if (action === "subscribe") {
               const paymentRoute =
                 subscriptionType === "premium" ? "premiumPass" : "classicPass";
@@ -143,11 +142,11 @@ const SubscriptionSelector = () => {
       {!basicSubscription && !premiumSubscription && (
         <>
           <Button
-            title="S'abonner à BASIC"
+            title="Acheter le pass BASIC"
             onPress={() => handleSubscription("basic", "subscribe")}
           />
           <Button
-            title="S'abonner à PREMIUM"
+            title="Acheter le pass PREMIUM"
             onPress={() => handleSubscription("premium", "subscribe")}
           />
         </>
@@ -161,13 +160,13 @@ const SubscriptionSelector = () => {
             {new Date(basicSubscriptionSince).toLocaleDateString()}
           </Text>
           <Button
-            title="Se désabonner de BASIC"
+            title="Se retirer de BASIC"
             color="red"
             onPress={() => handleSubscription("basic", "unsubscribe")}
           />
           {!premiumSubscription && (
             <Button
-              title="S'abonner à PREMIUM"
+              title="Acheter le pass PREMIUM"
               onPress={() => handleSubscription("premium", "subscribe")}
             />
           )}
@@ -182,13 +181,13 @@ const SubscriptionSelector = () => {
             {new Date(premiumSubscriptionSince).toLocaleDateString()}
           </Text>
           <Button
-            title="Se désabonner de PREMIUM"
+            title="Se retirer de Premium"
             color="red"
             onPress={() => handleSubscription("premium", "unsubscribe")}
           />
           {!basicSubscription && (
             <Button
-              title="S'abonner à BASIC"
+              title="Acheter le pass BASIC"
               onPress={() => handleSubscription("basic", "subscribe")}
             />
           )}

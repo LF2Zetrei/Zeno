@@ -22,7 +22,7 @@ export function useRoleUpdate() {
       }
 
       const res = await fetch(
-        `${API_URL}role?role=${encodeURIComponent(newRole)}`,
+        `${API_URL}user/role?role=${encodeURIComponent(newRole)}`,
         {
           method: "PUT",
           headers: {

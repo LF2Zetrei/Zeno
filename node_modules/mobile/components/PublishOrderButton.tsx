@@ -41,7 +41,7 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("✅ Réponse de /pay_mission :", res.status);
+      console.log("✅ Réponse de /pay_mission :", res);
       if (!res.ok) throw new Error("Échec de l'initialisation du paiement.");
 
       const { clientSecret } = await res.json();

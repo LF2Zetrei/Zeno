@@ -84,11 +84,17 @@ public class UserService {
 
     public void updatePremiumSubscription(User user){
         user.setPremiumSubscription(!user.isPremiumSubscription());
+        if (user.isBasicSubscription()) {
+            user.setPremiumSubscription(false);
+        }
         userRepository.save(user);
     }
 
     public void updateBasicSubscription(User user){
         user.setBasicSubscription(!user.isBasicSubscription());
+        if (user.isBasicSubscription()) {
+            user.setPremiumSubscription(false);
+        }
         userRepository.save(user);
     }
 

@@ -108,7 +108,7 @@ export default function CreateOrderForm({ onOrderCreated }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Transports de livraisons autorisés : train, avion, voiture, bateau ...."
-        value={form.city}
+        value={form.transports}
         onChangeText={(text) => handleChange("transports", text)}
       />
 

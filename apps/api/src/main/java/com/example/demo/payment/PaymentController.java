@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -84,13 +85,16 @@ public class PaymentController {
     }
 
     @PostMapping("/pay_mission/{orderId}")
-    public ResponseEntity<String> createPayment(
+    public ResponseEntity<Map<String, String>> createPayment(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable UUID orderId
     ) {
         String clientSecret = stripeService.createMissionPaymentIntent(orderId);
-        return ResponseEntity.ok(clientSecret);
+        Map<String, String> response = new HashMap<>();
+        response.put("clientSecret", clientSecret);
+        return ResponseEntity.ok(response); // ✅ Retourne application/json
     }
+
 
     @PostMapping("/{missionId}/transfer")
     public ResponseEntity<String> payDeliverer(

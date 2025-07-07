@@ -24,7 +24,7 @@ const StatusSelector = () => {
         const token = await AsyncStorage.getItem("token");
         if (!token) return;
 
-        const res = await fetch(`${API_URL}me`, {
+        const res = await fetch(`${API_URL}user/me`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
