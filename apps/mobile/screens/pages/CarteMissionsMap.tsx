@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, StyleSheet, Button } from "react-native";
-import CarteMissionsMap from "../../components/CarteMissionsMap";
+import CarteMissionsMap from "../../components/map/CarteMissionsMap";
 import { useMissions } from "../../hooks/mission/useMissions";
 import { useOrders } from "../../hooks/order/useOrders";
 import { getMissionByOrderId } from "../../utils/getMissionByOrderId";

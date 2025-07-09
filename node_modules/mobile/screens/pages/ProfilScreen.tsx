@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Alert, ActivityIndicator, Button } from "react-native";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
-import EditProfileForm from "../../components/EditProfilForm";
+import EditProfileForm from "../../components/form/EditProfilForm";
 
 export default function ProfilScreen() {
   const { user, loading } = useUserByJwt();

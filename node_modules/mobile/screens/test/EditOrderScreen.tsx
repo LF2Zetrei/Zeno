@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, ActivityIndicator } from "react-native";
-import EditOrderForm from "../../components/EditOrderForm";
+import EditOrderForm from "../../components/form/EditOrderForm";
 import { useOrderById } from "../../hooks/order/getOrderById";
 
 export default function EditOrderScreen() {

@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { useMessagesWithContact } from "../../hooks/message/useMessagesWithContact";
-import CreateMessageForm from "../../components/CreateMessageForm";
+import CreateMessageForm from "../../components/form/CreateMessageForm";
 
 type Props = {
   route: {

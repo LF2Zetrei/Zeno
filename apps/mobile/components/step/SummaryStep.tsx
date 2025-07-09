@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import PublishOrderButton from "../PublishOrderButton";
+import PublishOrderButton from "../button/PublishOrderButton";
 
 type Props = {
   orderId: string;

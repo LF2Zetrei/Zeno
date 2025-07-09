@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import CreateProductForm from "../CreateProductForm";
+import CreateProductForm from "../form/CreateProductForm";
 import { useProducts } from "../../hooks/product/useProducts";
 
 type Props = {

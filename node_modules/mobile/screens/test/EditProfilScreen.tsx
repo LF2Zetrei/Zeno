@@ -1,7 +1,7 @@
 // screens/ProfileEditScreen.tsx
 import React from "react";
 import { View, Alert, Text, ActivityIndicator, StyleSheet } from "react-native";
-import EditProfileForm from "../../components/EditProfilForm";
+import EditProfileForm from "../../components/form/EditProfilForm";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
 
 export default function EditProfilScreen() {

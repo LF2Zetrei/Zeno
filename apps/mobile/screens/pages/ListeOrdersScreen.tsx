@@ -8,10 +8,10 @@ import {
   StyleSheet,
 } from "react-native";
 import { useOrders } from "../../hooks/order/useOrders";
-import EditOrderForm from "../../components/EditOrderForm";
-import PublishOrderButton from "../../components/PublishOrderButton";
+import EditOrderForm from "../../components/form/EditOrderForm";
+import PublishOrderButton from "../../components/button/PublishOrderButton";
 import { getMissionByOrderId } from "../../utils/getMissionByOrderId";
-import DeleteOrderButton from "../../components/DeleteOrderButton";
+import DeleteOrderButton from "../../components/button/DeleteOrderButton";
 import { useNavigation } from "@react-navigation/native";
 import ReceivedMissionButton from "../../components/button/ReceivedMissionButton";
 

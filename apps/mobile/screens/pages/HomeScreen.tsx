@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
-import LogoutButton from "../../components/LogoutButton";
+import LogoutButton from "../../components/button/LogoutButton";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
 import { useMissions } from "../../hooks/mission/useMissions";
 import { useTrackingAutomatique } from "../../hooks/position/useRefreshPositionAuto";

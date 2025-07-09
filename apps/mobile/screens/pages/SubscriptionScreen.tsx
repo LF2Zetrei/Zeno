@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import SubscriptionSelector from "../../components/SubscriptionSelector";
+import SubscriptionSelector from "../../components/selector/SubscriptionSelector";
 
 export default function SubscriptionScreen() {
   return (

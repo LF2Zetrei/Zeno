@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
-import CreateOrderForm from "../CreateOrderForm";
+import CreateOrderForm from "../form/CreateOrderForm";
 
 type Props = {
   onOrderCreated: (order: any) => void;

@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import UserRating from "../../components/UserRating";
+import UserRating from "../../components/rating/UserRating";
 import { RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation";
 
