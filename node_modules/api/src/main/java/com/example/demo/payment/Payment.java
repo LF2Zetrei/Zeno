@@ -19,14 +19,17 @@ public class Payment {
     @Column(name = "id_payment", nullable = false, unique = true)
     private UUID idPayment;
 
+    @Column
     private Float amount;
     private String status;
+
+    private UUID userId;
 
     @Column(name = "stripe_id")
     private String stripeId;
 
     @OneToOne
-    @JoinColumn(name = "mission_id", nullable = false)
+    @JoinColumn(name = "mission_id", nullable = true)
     private Mission mission;
 
     @Column(name = "created_at")
@@ -35,6 +38,12 @@ public class Payment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+    public UUID getUserId() {
+        return userId;
+    }
     public Float getAmount() {
         return amount;
     }

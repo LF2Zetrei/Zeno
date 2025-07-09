@@ -108,15 +108,25 @@ public class UserService {
         }
     }
 
-    public void updateUserRole(User user, String role){
-
-        if (!user.getRole().equals(role) || !user.getRole().equals("USER") || !user.getRole().equals("DELIVER")) {
-            user.setRole(role);
-            userRepository.save(user);
-        }else {
-            throw new IllegalArgumentException("Role is invalid : " + role);
+    public void updateUserRole(User user, String role) {
+        // On autorise seulement "USER" et "DELIVER"
+        if (!role.equals("USER") && !role.equals("DELIVER")) {
+            throw new IllegalArgumentException("Role is invalid: " + role);
         }
 
+        String currentRole = user.getRole();
+
+        // On autorise seulement les transitions USER <-> DELIVER
+        boolean isAllowedTransition =
+                (currentRole.equals("USER") && role.equals("DELIVER")) ||
+                        (currentRole.equals("DELIVER") && role.equals("USER"));
+
+        if (!isAllowedTransition) {
+            throw new IllegalArgumentException("You can only switch between USER and DELIVER");
+        }
+
+        user.setRole(role);
+        userRepository.save(user);
     }
 
     public void rateUser(String userName, Float rate) {

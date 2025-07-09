@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Optional<Payment> findByMission(Mission mission);
+    Boolean existsByStripeIdAndUserId(String stripeId, UUID userId);
 }

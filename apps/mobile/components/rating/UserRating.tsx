@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
 
 // Icône simple d'étoile (peut être remplacée par une librairie comme react-native-vector-icons)

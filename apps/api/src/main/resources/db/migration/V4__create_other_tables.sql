@@ -36,7 +36,7 @@ CREATE TABLE payment (
                          amount FLOAT,
                          status VARCHAR(100),
                          stripe_id VARCHAR(255),
-                         mission_id UUID NOT NULL,
+                         mission_id UUID,
                          created_at TIMESTAMP,
                          updated_at TIMESTAMP,
                          CONSTRAINT fk_payment_mission FOREIGN KEY (mission_id) REFERENCES mission(id_mission)

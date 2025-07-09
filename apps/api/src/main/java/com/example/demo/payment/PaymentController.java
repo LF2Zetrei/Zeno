@@ -8,6 +8,7 @@ import com.example.demo.stripe.Pass;
 import com.example.demo.stripe.PaymentIntentResponse;
 import com.example.demo.stripe.StripeService;
 import com.example.demo.user.User;
+import com.example.demo.user.UserService;
 import com.stripe.exception.StripeException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +27,15 @@ public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final MissionRepository missionRepository;
     private final OrderRepository orderRepository;
+    private final UserService userService;
 
-    public PaymentController(PaymentService paymentService, StripeService stripeService, PaymentRepository paymentRepository, MissionRepository missionRepository, OrderRepository orderRepository) {
+    public PaymentController(PaymentService paymentService, StripeService stripeService, PaymentRepository paymentRepository, MissionRepository missionRepository, OrderRepository orderRepository, UserService userService) {
         this.paymentService = paymentService;
         this.stripeService = stripeService;
         this.paymentRepository = paymentRepository;
         this.missionRepository = missionRepository;
         this.orderRepository = orderRepository;
+        this.userService = userService;
     }
 
     private static final Pass classic_pass = Pass.CLASSIC;
@@ -74,15 +77,30 @@ public class PaymentController {
 
     @PostMapping("/classicPass")
     public Map<String, String> createClassicPayment(@RequestHeader("Authorization") String authHeader) {
-        String clientSecret = stripeService.createPaymentIntent(classic_pass);
-        return Map.of("clientSecret", clientSecret);
+        User user = userService.getUserByJwt(authHeader);
+        PaymentIntentResponse paymentIntent = stripeService.createPaymentIntent(classic_pass.getPrice());
+
+        stripeService.savePendingPayment(paymentIntent.getId(), user.getIdUser(), "classic");
+
+        return Map.of(
+                "clientSecret", paymentIntent.getClientSecret(),
+                "paymentIntentId", paymentIntent.getId()
+        );
     }
 
     @PostMapping("/premiumPass")
     public Map<String, String> createPremiumPayment(@RequestHeader("Authorization") String authHeader) {
-        String clientSecret = stripeService.createPaymentIntent(premium_pass);
-        return Map.of("clientSecret", clientSecret);
+        User user = userService.getUserByJwt(authHeader);
+        PaymentIntentResponse paymentIntent = stripeService.createPaymentIntent(premium_pass.getPrice());
+
+        stripeService.savePendingPayment(paymentIntent.getId(), user.getIdUser(), "premium");
+
+        return Map.of(
+                "clientSecret", paymentIntent.getClientSecret(),
+                "paymentIntentId", paymentIntent.getId()
+        );
     }
+
 
     @PostMapping("/pay_mission/{orderId}")
     public ResponseEntity<Map<String, String>> createPayment(

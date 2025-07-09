@@ -69,7 +69,7 @@ public class StripeService {
         Stripe.apiKey = stripeSecretKey;
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount((long) (amount * 100))
+                .setAmount((long) (amount * 100))  // Stripe attend des centimes
                 .setCurrency("eur")
                 .build();
 
@@ -79,11 +79,6 @@ public class StripeService {
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la création du paiement Stripe", e);
         }
-    }
-
-    public String createPaymentIntent(Pass pass) {
-        PaymentIntentResponse response = createPaymentIntent(pass.getPrice());
-        return response.getClientSecret();
     }
 
 
@@ -179,5 +174,18 @@ public class StripeService {
 
         createTransferToUser(deliverer.getStripeAccountId(), amountToSend);
     }
+
+    public void savePendingPayment(String paymentIntentId, UUID userId, String type) {
+        Payment pending = new Payment();
+        pending.setUserId(userId);
+        pending.setStripeId(paymentIntentId);
+        pending.setStatus(type);
+        paymentRepository.save(pending);
+    }
+
+    public boolean isPaymentIntentLinkedToUser(String paymentIntentId, UUID userId) {
+        return paymentRepository.existsByStripeIdAndUserId(paymentIntentId, userId);
+    }
+
 
 }

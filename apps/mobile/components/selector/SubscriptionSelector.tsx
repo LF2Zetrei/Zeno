@@ -18,8 +18,8 @@ const SubscriptionSelector = () => {
   const [localUser, setLocalUser] = useState<any>(null);
 
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
   useEffect(() => {
     if (user && !localUser) {
       setLocalUser(user);
@@ -45,6 +45,7 @@ const SubscriptionSelector = () => {
         onPress: async () => {
           setLoading(true);
           const token = await AsyncStorage.getItem("token");
+          let paymentIntentId: string | null = null;
 
           try {
             if (action === "subscribe") {
@@ -59,9 +60,13 @@ const SubscriptionSelector = () => {
                 },
               });
 
-              const { clientSecret } = await res.json();
+              const { clientSecret, paymentIntentId: fetchedPaymentIntentId } =
+                await res.json();
+              paymentIntentId = fetchedPaymentIntentId;
+
               const merchantDisplayName =
                 Constants.expoConfig?.extra?.merchantDisplayName || "Zeno";
+
               const { error: initError } = await initPaymentSheet({
                 paymentIntentClientSecret: clientSecret,
                 merchantDisplayName,
@@ -74,17 +79,17 @@ const SubscriptionSelector = () => {
               if (paymentError) throw new Error(paymentError.message);
             }
 
-            // Appel API pour activer ou désactiver l’abonnement
-            const response = await fetch(
-              `${API_URL}user/subscription?subscriptionType=${subscriptionType}`,
-              {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
+            const body: any = { subscriptionType };
+            if (paymentIntentId) body.paymentIntentId = paymentIntentId;
+
+            const response = await fetch(`${API_URL}user/subscription`, {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(body),
+            });
 
             if (!response.ok) throw new Error("Échec de la mise à jour");
 
@@ -138,7 +143,6 @@ const SubscriptionSelector = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Gestion des abonnements</Text>
 
-      {/* Aucun abonnement */}
       {!basicSubscription && !premiumSubscription && (
         <>
           <Button
@@ -152,7 +156,6 @@ const SubscriptionSelector = () => {
         </>
       )}
 
-      {/* Abonné BASIC */}
       {basicSubscription && (
         <>
           <Text style={styles.info}>
@@ -173,7 +176,6 @@ const SubscriptionSelector = () => {
         </>
       )}
 
-      {/* Abonné PREMIUM */}
       {premiumSubscription && (
         <>
           <Text style={styles.info}>

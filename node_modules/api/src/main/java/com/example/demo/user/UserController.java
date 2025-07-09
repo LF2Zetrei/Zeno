@@ -1,5 +1,9 @@
 package com.example.demo.user;
 
+import com.example.demo.stripe.StripeService;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -14,10 +19,12 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
+    private final StripeService stripeService;
 
-    public UserController(UserService userService, UserRepository userRepository) {
+    public UserController(UserService userService, UserRepository userRepository, StripeService stripeService) {
         this.userService = userService;
         this.userRepository = userRepository;
+        this.stripeService = stripeService;
     }
 
     @GetMapping("/me")
@@ -27,9 +34,11 @@ public class UserController {
     }
 
     @GetMapping("/best")
-    public ResponseEntity<List<User>> getBestUsers() {
+    public ResponseEntity<List<String>> getBestUsers() {
         List<User> users = userService.getUsersByRatingAverage();
-        return ResponseEntity.ok(users);
+        List<String> bestUsers = new ArrayList<>();
+        users.forEach(user -> { bestUsers.add(user.getPseudo());});
+        return ResponseEntity.ok(bestUsers);
     }
 
     @PutMapping("role")
@@ -41,6 +50,7 @@ public class UserController {
 
         return ResponseEntity.ok(user);
     }
+
     @PutMapping("/position")
     public ResponseEntity<?> updatePosition(@RequestHeader("Authorization") String authHeader, @RequestParam Double latitude, @RequestParam Double longitude) {
         User user = userService.getUserByJwt(authHeader);
@@ -55,13 +65,31 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping("/subscription")
-    public ResponseEntity<?> updateSubscription(@RequestHeader("Authorization") String authHeader,
-                                             @RequestParam("subscriptionType") String subscriptionType) {
+    @PutMapping("/user/subscription")
+    public ResponseEntity<?> updateSubscription(
+            @RequestBody SubscriptionRequest request,
+            @RequestHeader("Authorization") String authHeader
+    ) throws StripeException {
         User user = userService.getUserByJwt(authHeader);
-        userService.updateSubscription(subscriptionType, user);
-        return ResponseEntity.ok(user);
+
+        // Vérifie le statut du PaymentIntent
+        PaymentIntent intent = PaymentIntent.retrieve(request.getPaymentIntentId());
+        if (!"succeeded".equals(intent.getStatus())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Paiement non validé");
+        }
+
+        // Optionnel : vérifier que ce PaymentIntent correspond bien à l'utilisateur
+        if (!stripeService.isPaymentIntentLinkedToUser(intent.getId(), user.getIdUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Ce paiement ne vous appartient pas");
+        }
+
+        // OK : met à jour l’abonnement
+        userService.updateSubscription(request.getSubscriptionType(), user);
+        return ResponseEntity.ok().build();
     }
+
 
     @PutMapping("/rate")
     public ResponseEntity<?> rateUser(
