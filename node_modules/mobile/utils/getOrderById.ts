@@ -13,7 +13,7 @@ export async function getOrderById(orderId: string) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    const rawText = await res.text(); // 👈 on lit le texte brut
+    const rawText = await res.text();
     console.log("Réponse brute :", rawText);
 
     if (!res.ok) {
@@ -21,7 +21,7 @@ export async function getOrderById(orderId: string) {
       return null;
     }
 
-    const data = JSON.parse(rawText); // 👈 on parse ensuite
+    const data = JSON.parse(rawText);
     return data;
   } catch (error) {
     console.error("Erreur fetch order:", error);

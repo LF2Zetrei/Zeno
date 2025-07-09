@@ -23,42 +23,53 @@ const AcceptMissionButton = ({
   const { actualiserPosition } = useActualiserPositionTracking();
 
   const handleAcceptMission = () => {
-    Alert.alert("Accepter la mission", "Souhaites-tu devenir le livreur ?", [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Accepter",
-        onPress: async () => {
-          setLoading(true);
-          try {
-            const API_URL = Constants.expoConfig?.extra?.apiUrl || "";
-            const url = `${API_URL.replace(
-              /\/$/,
-              ""
-            )}/mission/${missionId}/assign`;
+    Alert.alert(
+      "Confirmer l'acceptation de la mission",
+      "⚠️ Une fois cette mission acceptée, vous serez responsable de sa livraison. Veuillez vous assurer d'avoir discuté avec l'acheteur avant de confirmer.\n\nSouhaitez-vous devenir le livreur ?",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Accepter la mission",
+          style: "destructive",
+          onPress: async () => {
+            setLoading(true);
+            try {
+              const API_URL = Constants.expoConfig?.extra?.apiUrl || "";
+              const url = `${API_URL.replace(
+                /\/$/,
+                ""
+              )}/mission/${missionId}/assign`;
 
-            const response = await fetch(url, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            });
+              const response = await fetch(url, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+              });
 
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({}));
-              throw new Error(errorData.message || "Échec de l’assignation");
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Échec de l’assignation");
+              }
+
+              // ✅ Mise à jour immédiate de la position
+              await actualiserPosition(missionId);
+
+              Alert.alert(
+                "🎉 Mission acceptée",
+                "Vous êtes maintenant assigné à cette mission."
+              );
+              if (onSuccess) onSuccess();
+            } catch (error: any) {
+              Alert.alert(
+                "❌ Erreur",
+                error.message || "Une erreur est survenue."
+              );
+            } finally {
+              setLoading(false);
             }
-
-            // ✅ Mise à jour immédiate de la position
-            await actualiserPosition(missionId);
-
-            Alert.alert("Mission acceptée !");
-            if (onSuccess) onSuccess();
-          } catch (error: any) {
-            Alert.alert("Erreur", error.message);
-          } finally {
-            setLoading(false);
-          }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   return (

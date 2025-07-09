@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, FlatList, Button } from "react-native";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  Button,
+  Alert,
+} from "react-native";
 import Slider from "@react-native-community/slider";
 import { useMissions } from "../../hooks/mission/useMissions";
 import { useMyMissions } from "../../hooks/mission/useMyMissions";
@@ -9,6 +16,8 @@ import UnassignMissionButton from "../../components/UnassignMissionButton";
 import { useMissionState } from "../../hooks/mission/useMissionState";
 import { useNearbyMissions } from "../../hooks/mission/getMissionsNearby";
 import DeliveredMissionButton from "../../components/button/DeliveredMissionButton";
+import { useNavigation } from "@react-navigation/native";
+import { getOrderById } from "../../utils/getOrderById";
 
 export default function MissionsScreen() {
   const { missions: missionsFromHook, loading: loadingMissions } =
@@ -16,7 +25,7 @@ export default function MissionsScreen() {
   const { missions: myMissions, loading: loadingMyMissions } = useMyMissions();
   const { user, loading: loadingUser } = useUserByJwt();
   const { updateMissionStatus, loading, error, success } = useMissionState();
-
+  const navigation = useNavigation();
   const [missions, setMissions] = useState([]);
   const [showMyMissions, setShowMyMissions] = useState(false);
   const [showNearbyMissions, setShowNearbyMissions] = useState(false);
@@ -222,16 +231,30 @@ export default function MissionsScreen() {
                 )}
 
                 <Text>
-                  {String(item.travelerId) === String(user.idUser) ? (
-                    <UnassignMissionButton
-                      missionId={item.idMission}
-                      onSuccess={() => handleUnassignMission(item.idMission)}
-                    />
-                  ) : (
-                    <AcceptMissionButton
-                      missionId={item.idMission}
-                      onSuccess={() => handleAcceptMission(item.idMission)}
-                    />
+                  {String(item.travelerId) === String(user.idUser) ? null : (
+                    <View style={{ marginTop: 10 }}>
+                      <AcceptMissionButton
+                        missionId={item.idMission}
+                        onSuccess={() => handleAcceptMission(item.idMission)}
+                      />
+                      <Button
+                        title="Aller à la messagerie"
+                        onPress={async () => {
+                          const order = await getOrderById(item.orderId);
+                          console.log(order);
+                          if (order && order.buyer.idUser) {
+                            navigation.navigate("Messagerie", {
+                              contactId: order.buyer.idUser,
+                              contactName: order.buyer.pseudo,
+                            });
+                          } else {
+                            alert(
+                              "Impossible de récupérer l'identifiant de l'acheteur."
+                            );
+                          }
+                        }}
+                      />
+                    </View>
                   )}
                 </Text>
               </View>
