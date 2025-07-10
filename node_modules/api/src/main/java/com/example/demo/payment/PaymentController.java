@@ -103,15 +103,24 @@ public class PaymentController {
 
 
     @PostMapping("/pay_mission/{orderId}")
-    public ResponseEntity<Map<String, String>> createPayment(
+    public Map<String, String> createMissionPayment(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable UUID orderId
     ) {
-        String clientSecret = stripeService.createMissionPaymentIntent(orderId);
-        Map<String, String> response = new HashMap<>();
-        response.put("clientSecret", clientSecret);
-        return ResponseEntity.ok(response); // ✅ Retourne application/json
+        User user = userService.getUserByJwt(authHeader);
+
+        // Créer le PaymentIntent et obtenir l'ID et le clientSecret
+        PaymentIntentResponse paymentIntent = stripeService.createMissionPaymentIntentWithResponse(orderId);
+
+        // Sauvegarder le paiement en attente avec l'utilisateur
+        stripeService.savePendingPayment(paymentIntent.getId(), user.getIdUser(), "mission");
+
+        return Map.of(
+                "clientSecret", paymentIntent.getClientSecret(),
+                "paymentIntentId", paymentIntent.getId()
+        );
     }
+
 
 
     @PostMapping("/{missionId}/transfer")

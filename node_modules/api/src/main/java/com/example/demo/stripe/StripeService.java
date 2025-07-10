@@ -187,5 +187,30 @@ public class StripeService {
         return paymentRepository.existsByStripeIdAndUserId(paymentIntentId, userId);
     }
 
+    public PaymentIntentResponse createMissionPaymentIntentWithResponse(UUID orderId) {
+        Order order = orderRepository.findByIdOrder(orderId)
+                .orElseThrow(() -> new RuntimeException("Order non trouvé"));
+
+        Mission mission = missionRepository.findByOrder(order)
+                .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+
+        Payment payment = paymentRepository.findByMission(mission)
+                .orElseThrow(() -> new RuntimeException("Payment non trouvée"));
+
+        if (payment.getAmount() == null) {
+            throw new RuntimeException("Montant du paiement manquant");
+        }
+
+        PaymentIntentResponse intentResponse = createPaymentIntent(payment.getAmount());
+
+        payment.setStripeId(intentResponse.getId());
+        payment.setStatus("CREATED");
+        payment.setUpdatedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        return intentResponse; // retourne à la fois ID et clientSecret
+    }
+
+
 
 }
