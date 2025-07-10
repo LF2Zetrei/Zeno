@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "./types/navigation";
 import HomeScreen from "./screens/pages/HomeScreen";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Image } from "react-native";
 import RegisterScreen from "./screens/pages/RegisterScreen";
 import ConnexionScreen from "./screens/pages/ConnexionScreen";
 import ProfilScreen from "./screens/pages/ProfilScreen";
@@ -21,6 +21,7 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
 import { useEffect } from "react";
+import CustomHeaderRight from "./components/header/CustomHeaderRight";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,25 +37,122 @@ function AppRoutes() {
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerTitle: () => (
+          <Image
+            source={require("./assets/logo/logo-base-noir.png")} // logo centré
+            style={{ width: 100, height: 40, resizeMode: "contain" }}
+          />
+        ),
+        headerRight: () => <CustomHeaderRight />,
+        headerStyle: {
+          backgroundColor: "#f4f4f4",
+        },
+        headerTintColor: "#333",
+      }}
+    >
       {token ? (
         <>
-          <Stack.Screen name="Accueil" component={HomeScreen} />
-          <Stack.Screen name="Profil" component={ProfilScreen} />
-          <Stack.Screen name="Missions" component={ListeMissionsScreen} />
-          <Stack.Screen name="Map" component={CarteMissionsScreen} />
-          <Stack.Screen name="Contact" component={ContactsScreen} />
-          <Stack.Screen name="Messagerie" component={MessagerieScreen} />
-          <Stack.Screen name="CreateMission" component={OrderWizard} />
-          <Stack.Screen name="Orders" component={ListeOrderScreen} />
-          <Stack.Screen name="Subscription" component={SubscriptionScreen} />
-          <Stack.Screen name="Role" component={RoleScreen} />
-          <Stack.Screen name="Rating" component={UserRatingScreen} />
+          <Stack.Screen
+            name="Accueil"
+            component={HomeScreen}
+            options={{
+              headerBackTitle: "",
+            }}
+          />
+          <Stack.Screen
+            name="Profil"
+            component={ProfilScreen}
+            options={{
+              headerTitle: "Profil",
+              headerRight: undefined,
+            }}
+          />
+          <Stack.Screen
+            name="Missions"
+            component={ListeMissionsScreen}
+            options={{
+              headerTitle: "Missions",
+            }}
+          />
+          <Stack.Screen
+            name="Carte"
+            component={CarteMissionsScreen}
+            options={{
+              headerTitle: "Carte",
+            }}
+          />
+          <Stack.Screen
+            name="Contact"
+            component={ContactsScreen}
+            options={{
+              headerTitle: "Contacts",
+            }}
+          />
+          <Stack.Screen
+            name="Messagerie"
+            component={MessagerieScreen}
+            options={{
+              headerTitle: "Messagerie",
+            }}
+          />
+          <Stack.Screen
+            name="CreateMission"
+            component={OrderWizard}
+            options={{
+              headerTitle: "Créer une mission",
+            }}
+          />
+          <Stack.Screen
+            name="Orders"
+            component={ListeOrderScreen}
+            options={{
+              headerTitle: "Commandes",
+            }}
+          />
+          <Stack.Screen
+            name="Subscription"
+            component={SubscriptionScreen}
+            options={{
+              headerTitle: "Les pass Zeno",
+            }}
+          />
+          <Stack.Screen
+            name="Role"
+            component={RoleScreen}
+            options={{
+              headerTitle: "Mes roles",
+            }}
+          />
+          <Stack.Screen
+            name="Rating"
+            component={UserRatingScreen}
+            options={{
+              headerTitle: "Noter un utilisateur",
+            }}
+          />
         </>
       ) : (
         <>
-          <Stack.Screen name="Connexion" component={ConnexionScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen
+            name="Connexion"
+            component={ConnexionScreen}
+            options={{
+              headerTitle: "Connexion",
+              headerRight: undefined,
+              headerBackTitle: "",
+            }}
+          />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{
+              headerTitle: "Inscription",
+              headerRight: undefined,
+              headerBackTitle: "",
+            }}
+          />
         </>
       )}
     </Stack.Navigator>
