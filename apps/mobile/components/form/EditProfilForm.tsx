@@ -15,7 +15,7 @@ import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
-import { COLORS } from "../../styles/color"; // 🔥 utilise ta charte
+import { COLORS } from "../../styles/color";
 
 interface EditProfileFormProps {
   initialData: {

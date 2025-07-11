@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { getOrderById } from "../../utils/getOrderById";
 import { getTrackingPositionsByMissions } from "../../utils/getTrackingPositions";
+import { COLORS } from "../../styles/color";
 
 export default function CarteMissionsMap({
   missions,
@@ -74,12 +75,21 @@ export default function CarteMissionsMap({
                 latitude: data.latitude,
                 longitude: data.longitude,
               }}
+              pinColor={COLORS.primaryPink}
               onPress={() => setSelectedMission({ mission, data })}
             >
               <Callout>
-                <Text>Mission ID: {mission.idMission}</Text>
-                {!trackingMode && <Text>Commande ID: {data.idOrder}</Text>}
-                {trackingMode && <Text>Position trackée</Text>}
+                <Text style={{ fontWeight: "bold", color: "#2f167f" }}>
+                  Mission ID: {mission.idMission}
+                </Text>
+                {!trackingMode && (
+                  <Text style={{ color: "#050212" }}>
+                    Commande ID: {data.idOrder}
+                  </Text>
+                )}
+                {trackingMode && (
+                  <Text style={{ color: "#050212" }}>Position trackée</Text>
+                )}
               </Callout>
             </Marker>
           );
@@ -137,29 +147,47 @@ export default function CarteMissionsMap({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { justifyContent: "center", alignItems: "center" },
-  map: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff", // background
+  },
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff", // même que background
+  },
+  map: {
+    flex: 1,
+  },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // overlay noir transparent
   },
   modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
+    backgroundColor: "#f4f4f8", // card
+    padding: 24,
+    borderRadius: 16,
+    width: "85%",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    color: COLORS.primaryBlue, // primaryBlue
+    marginBottom: 12,
+    textAlign: "center",
   },
   closeText: {
-    marginTop: 20,
-    color: "blue",
+    marginTop: 24,
+    color: COLORS.primaryYellow,
     textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

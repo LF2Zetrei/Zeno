@@ -6,14 +6,19 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { useRoleUpdate } from "../../hooks/user/useUserRole";
+import { COLORS } from "../../styles/color";
 
 const StatusSelector = () => {
   const [currentRole, setCurrentRole] = useState<string | null>(null);
   const [loadingRole, setLoadingRole] = useState(true);
+  const [selectedRole, setSelectedRole] = useState<"USER" | "DELIVER" | null>(
+    null
+  );
 
   const { updateUserRole, loading, error, success } = useRoleUpdate();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
@@ -35,7 +40,8 @@ const StatusSelector = () => {
 
         const userData = await res.json();
         setCurrentRole(userData?.role || null);
-      } catch (err) {
+        setSelectedRole(userData?.role || null); // par défaut sélectionne le rôle actuel
+      } catch (err: any) {
         Alert.alert("Erreur", err.message || "Une erreur est survenue");
       } finally {
         setLoadingRole(false);
@@ -46,19 +52,24 @@ const StatusSelector = () => {
   }, []);
 
   const handleRoleChange = (newRole: "USER" | "DELIVER") => {
+    if (newRole === currentRole) return; // Pas besoin de changer
+
     Alert.alert(
       "Confirmation",
       `Voulez-vous changer votre rôle pour "${newRole}" ?`,
       [
-        {
-          text: "Annuler",
-          style: "cancel",
-        },
+        { text: "Annuler", style: "cancel" },
         {
           text: "Confirmer",
           onPress: async () => {
             await updateUserRole(newRole);
-            setCurrentRole(newRole);
+            if (error) {
+              Alert.alert("Erreur", error);
+            } else {
+              setCurrentRole(newRole);
+              setSelectedRole(newRole);
+              Alert.alert("Succès", "Changement de rôle effectué !");
+            }
           },
         },
       ]
@@ -68,7 +79,7 @@ const StatusSelector = () => {
   if (loadingRole) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={COLORS.primaryBlue} />
       </View>
     );
   }
@@ -77,63 +88,125 @@ const StatusSelector = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Sélection du rôle</Text>
 
-      <Text style={styles.info}>
-        Rôle actuel :{" "}
-        <Text style={styles.roleText}>{currentRole || "Inconnu"}</Text>
-      </Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[
+            styles.roleBox,
+            { backgroundColor: COLORS.primaryBlue },
+            selectedRole === "USER"
+              ? styles.selectedRoleBox
+              : styles.unselectedRoleBox,
+          ]}
+          onPress={() => setSelectedRole("USER")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.roleTitle}>Rôle USER</Text>
+          <Text style={styles.roleDescription}>
+            Pour acheter ou demander des produits.
+          </Text>
+          {currentRole === "USER" && (
+            <Text style={styles.currentRoleLabel}>Rôle actuel</Text>
+          )}
+        </TouchableOpacity>
 
-      {currentRole !== "USER" && (
+        <TouchableOpacity
+          style={[
+            styles.roleBox,
+            { backgroundColor: COLORS.primaryPink },
+            selectedRole === "DELIVER"
+              ? styles.selectedRoleBox
+              : styles.unselectedRoleBox,
+          ]}
+          onPress={() => setSelectedRole("DELIVER")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.roleTitle}>Rôle DELIVER</Text>
+          <Text style={styles.roleDescription}>
+            Pour livrer des produits aux utilisateurs.
+          </Text>
+          {currentRole === "DELIVER" && (
+            <Text style={styles.currentRoleLabel}>Rôle actuel</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.actionButtonContainer}>
         <Button
-          title="Passer en USER"
-          onPress={() => handleRoleChange("USER")}
+          title={`Changer pour ${selectedRole || "..."}`}
+          onPress={() => selectedRole && handleRoleChange(selectedRole)}
+          disabled={loading || !selectedRole || selectedRole === currentRole}
+          color={COLORS.primaryYellow}
         />
-      )}
+      </View>
 
-      {currentRole !== "DELIVER" && (
-        <Button
-          title="Passer en DELIVER"
-          onPress={() => handleRoleChange("DELIVER")}
-        />
-      )}
-
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
-
-      {error && <Text style={styles.error}>Erreur : {error}</Text>}
-
-      {success && (
-        <Text style={styles.success}>
-          Changement de rôle effectué avec succès
-        </Text>
-      )}
+      {loading && <ActivityIndicator size="large" color={COLORS.primaryBlue} />}
     </View>
   );
 };
-
 const styles = StyleSheet.create({
+  activeRoleBox: {
+    borderWidth: 3,
+    borderColor: "#fff",
+    opacity: 1,
+  },
+  currentRoleLabel: {
+    marginTop: 10,
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
   container: {
     padding: 24,
     gap: 16,
+    backgroundColor: COLORS.background,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
+    color: COLORS.primaryBlue,
   },
   info: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: "center",
+    color: COLORS.secondaryOlive,
+    marginBottom: 8,
   },
   roleText: {
     fontWeight: "bold",
-    color: "#007aff",
+    color: COLORS.primaryBlue,
   },
-  error: {
-    color: "red",
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginVertical: 20,
+  },
+  roleBox: {
+    padding: 20,
+    borderRadius: 10,
+    width: "45%",
+    justifyContent: "center",
+    alignItems: "center",
+    opacity: 0.9,
+  },
+  roleTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  roleDescription: {
+    fontSize: 14,
+    color: "#fff",
+    marginBottom: 16,
     textAlign: "center",
   },
-  success: {
-    color: "green",
-    textAlign: "center",
+  unselectedRoleBox: {
+    opacity: 0.5,
+    transform: [{ scale: 0.9 }],
+    // pour faire un effet grisé, on peut aussi appliquer un filtre de couleur via une vue en overlay,
+    // mais ici opacity suffit pour simplifier
   },
 });
 
