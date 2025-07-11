@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
@@ -17,6 +18,19 @@ import { useTrackingUserAutomatique } from "../../hooks/position/useRefreshUserP
 
 type Props = NativeStackScreenProps<RootStackParamList, "Accueil">;
 
+// [Pas de changement dans l'import]
+
+const COLORS = {
+  primaryBlue: "#2f167f",
+  primaryPink: "#cb157c",
+  primaryYellow: "#ffb01b",
+  secondaryOlive: "#869962",
+  secondaryFluo: "#fcff00",
+  dark: "#050212",
+  background: "#fff",
+  card: "#f4f4f8",
+};
+
 export default function HomeScreen({ navigation }: Props) {
   const { user, loading: loadingUser } = useUserByJwt();
   const { missions, loading: loadingMissions } = useMissions();
@@ -24,53 +38,91 @@ export default function HomeScreen({ navigation }: Props) {
   const missionsFiltrees = missions.filter(
     (mission) => mission.traveler?.idUser === user?.idUser
   );
-
   const missionIds = missionsFiltrees.map((mission) => mission.idMission);
 
   useTrackingAutomatique(missionIds);
   useTrackingUserAutomatique();
 
+  const heure = new Date().getHours();
+  const salutation =
+    heure < 12 ? "Bonjour" : heure < 18 ? "Bon après-midi" : "Bonsoir";
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Bienvenue sur la page d'accueil !</Text>
+      {/* Bandeau de bienvenue */}
+      <View style={styles.header}>
+        <Text style={styles.welcomeText}>
+          {salutation}, {user?.pseudo || "voyageur"} 👋
+        </Text>
+        <Text style={styles.subText}>
+          Que souhaitez-vous faire aujourd'hui ?
+        </Text>
+      </View>
 
-      {(loadingUser || loadingMissions) && <ActivityIndicator />}
+      {(loadingUser || loadingMissions) && (
+        <ActivityIndicator color={COLORS.primaryPink} />
+      )}
 
-      <Text style={{ marginBottom: 10 }}>
-        {missionIds.length > 0
-          ? `Tracking actif pour ${missionIds.length} mission(s)`
-          : "Aucune mission en cours à suivre"}
-      </Text>
+      {/* Suivi des missions */}
+      <View
+        style={[
+          styles.trackingStatus,
+          {
+            backgroundColor:
+              missionIds.length > 0 ? COLORS.secondaryOlive : "#f8d7da",
+          },
+        ]}
+      >
+        <Text style={styles.trackingText}>
+          {missionIds.length > 0
+            ? `🔵 Tracking actif : ${missionIds.length} mission(s)`
+            : "🟡 Aucune mission en cours"}
+        </Text>
+      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Mon profil :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Profil")}>
-          <Text style={styles.linkText}>Voir mon profil</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>Les missions :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Missions")}>
-          <Text style={styles.linkText}>Voir les missions</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>Vos commandes:</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Orders")}>
-          <Text style={styles.linkText}>Voir vos commandes</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>La carte :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Map")}>
-          <Text style={styles.linkText}>Voir la carte des missons</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>La messagerie :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Contact")}>
-          <Text style={styles.linkText}>Voir les contacts</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>Créer vos missions :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("CreateMission")}>
-          <Text style={styles.linkText}>Créer une mission</Text>
-        </TouchableOpacity>
-        <Text style={styles.label}>Vos abonnements :</Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Subscription")}>
-          <Text style={styles.linkText}>Voir les offres</Text>
-        </TouchableOpacity>
+      {/* Menu */}
+      <View style={styles.menu}>
+        <MenuCard
+          label="Missions"
+          desc="Voir les missions"
+          onPress={() => navigation.navigate("Missions")}
+        />
+        <MenuCard
+          label="Commandes"
+          desc="Voir vos commandes"
+          onPress={() => navigation.navigate("Orders")}
+        />
+        <MenuCard
+          label="Carte"
+          desc="Carte des missions"
+          onPress={() => navigation.navigate("Map")}
+        />
+        <MenuCard
+          label="Messagerie"
+          desc="Voir vos messages"
+          onPress={() => navigation.navigate("Contact")}
+        />
+        <MenuCard
+          label="Créer mission"
+          desc="Créer une mission"
+          onPress={() => navigation.navigate("CreateMission")}
+        />
+        <MenuCard
+          label="Abonnements"
+          desc="Voir les offres"
+          onPress={() => navigation.navigate("Subscription")}
+        />
+      </View>
+
+      {/* Mascotte toucan */}
+      <View style={styles.mascotSection}>
+        <Image
+          source={require("../../assets/mascotte/toucan-vole.png")}
+          style={styles.toucanImage}
+        />
+        <Text style={styles.toucanQuote}>
+          “Lancez-vous dans la quête de l'introuvable!”
+        </Text>
       </View>
 
       <LogoutButton />
@@ -78,29 +130,107 @@ export default function HomeScreen({ navigation }: Props) {
   );
 }
 
+function MenuCard({
+  label,
+  desc,
+  onPress,
+}: {
+  label: string;
+  desc: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <Text style={styles.cardTitle}>{label}</Text>
+      <Text style={styles.cardDesc}>{desc}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
-    padding: 50,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    backgroundColor: COLORS.background,
+  },
+  header: {
+    marginBottom: 20,
     alignItems: "center",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
+  welcomeText: {
+    fontSize: 24,
+    color: COLORS.primaryBlue,
     textAlign: "center",
+    fontFamily: "NunitoBold",
   },
-  section: {
-    marginBottom: 20,
+  subText: {
+    fontSize: 16,
+    color: COLORS.dark,
+    textAlign: "center",
+    marginTop: 5,
+    fontFamily: "Nunito",
+  },
+  trackingStatus: {
+    padding: 12,
+    borderRadius: 10,
+    marginVertical: 20,
     width: "100%",
   },
-  label: {
-    fontSize: 16,
+  trackingText: {
+    textAlign: "center",
     fontWeight: "600",
-    marginBottom: 8,
+    color: COLORS.dark,
+    fontFamily: "Nunito",
   },
-  linkText: {
-    color: "#007AFF",
-    marginVertical: 4,
-    fontSize: 15,
+  menu: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 30,
+    width: "100%",
+  },
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    width: "47%",
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPink,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: "center",
+  },
+  cardTitle: {
+    fontSize: 16,
+    color: COLORS.primaryBlue,
+    marginBottom: 6,
+    fontFamily: "MuseoModernoBold",
+  },
+  cardDesc: {
+    fontSize: 13,
+    color: "#555",
+    textAlign: "center",
+    fontFamily: "Nunito",
+  },
+  mascotSection: {
+    alignItems: "center",
+    marginVertical: 30,
+  },
+  toucanImage: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
+  },
+  toucanQuote: {
+    fontStyle: "italic",
+    color: COLORS.primaryPink,
+    marginTop: 10,
+    textAlign: "center",
+    fontFamily: "NunitoItalic", // 👈 si tu veux l’italique
   },
 });

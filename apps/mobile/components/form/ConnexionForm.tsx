@@ -3,12 +3,12 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   Alert,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
+  ImageBackground,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
@@ -19,7 +19,7 @@ export default function ConnexionForm() {
   const navigation = useNavigation();
   const { login } = useAuth();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
-  console.log(`${API_URL}auth/login`);
+
   const handleLogin = async () => {
     try {
       const res = await fetch(`${API_URL}auth/login`, {
@@ -37,10 +37,8 @@ export default function ConnexionForm() {
       const data = await res.json();
       const token = data.token;
 
-      await login(token); // 👈 ici
-
+      await login(token);
       Alert.alert("Succès", "Connecté avec succès !");
-      console.log("Token reçu :", token);
     } catch (err) {
       console.error(err);
       Alert.alert("Erreur", "Impossible de se connecter au serveur.");
@@ -48,49 +46,115 @@ export default function ConnexionForm() {
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        autoCapitalize="none"
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mot de passe"
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
-      />
-      <Button title="Se connecter" onPress={handleLogin} />
-      <View style={styles.linkContainer}>
-        <Text>Pas encore de compte ? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.linkText}>Inscris-toi ici</Text>
-        </TouchableOpacity>
+    <ImageBackground
+      source={require("../../assets/leafs/frise-logo.png")} // image avec ambiance exclusive / monde / luxe
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.title}>ZENO</Text>
+        <Text style={styles.slogan}>Offrez-vous l’introuvable</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#ccc"
+          value={email}
+          autoCapitalize="none"
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          placeholderTextColor="#ccc"
+          value={password}
+          secureTextEntry
+          onChangeText={setPassword}
+        />
+
+        <Pressable style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Se connecter</Text>
+        </Pressable>
+
+        <View style={styles.linkContainer}>
+          <Text style={styles.text}>Pas encore de compte ? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={styles.linkText}>Je m'inscris</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 12,
+  background: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(5, 2, 18, 0.9)", // obscurcissement doux
+    padding: 24,
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 36,
+    fontFamily: "MuseoModernoBold",
+    color: "#cb157c",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  slogan: {
+    fontSize: 16,
+    fontFamily: "Nunito",
+    color: "#ffb01b",
+    textAlign: "center",
+    marginBottom: 32,
   },
   input: {
-    borderColor: "#ccc",
+    backgroundColor: "#2f167f",
+    color: "#fff",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
     borderWidth: 1,
-    padding: 8,
-    borderRadius: 6,
+    borderColor: "#cb157c",
+    marginBottom: 12,
+    fontFamily: "Nunito",
+  },
+  button: {
+    backgroundColor: "#cb157c",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#fcff00",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  buttonText: {
+    color: "#050212",
+    fontSize: 16,
+    fontWeight: "bold",
+    fontFamily: "NunitoBold",
   },
   linkContainer: {
     flexDirection: "row",
-    marginTop: 20,
-    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 24,
+  },
+  text: {
+    color: "#ffffffcc",
+    fontSize: 14,
+    fontFamily: "Nunito",
   },
   linkText: {
-    color: "blue",
+    color: "#ffb01b",
+    fontWeight: "bold",
+    marginLeft: 4,
+    textDecorationLine: "underline",
   },
 });

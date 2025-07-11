@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackParamList } from "./types/navigation";
@@ -20,8 +20,9 @@ import UserRatingScreen from "./screens/pages/UserRatingScreen";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import Constants from "expo-constants";
 import * as Linking from "expo-linking";
-import { useEffect } from "react";
 import CustomHeaderRight from "./components/header/CustomHeaderRight";
+import * as Font from "expo-font";
+import { useFonts } from "expo-font";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -41,7 +42,7 @@ function AppRoutes() {
       screenOptions={{
         headerTitle: () => (
           <Image
-            source={require("./assets/logo/logo-base-noir.png")} // logo centré
+            source={require("./assets/logo/logo-base-noir.png")}
             style={{ width: 100, height: 40, resizeMode: "contain" }}
           />
         ),
@@ -54,83 +55,56 @@ function AppRoutes() {
     >
       {token ? (
         <>
-          <Stack.Screen
-            name="Accueil"
-            component={HomeScreen}
-            options={{
-              headerBackTitle: "",
-            }}
-          />
+          <Stack.Screen name="Accueil" component={HomeScreen} />
           <Stack.Screen
             name="Profil"
             component={ProfilScreen}
-            options={{
-              headerTitle: "Profil",
-              headerRight: undefined,
-            }}
+            options={{ headerTitle: "Profil", headerRight: undefined }}
           />
           <Stack.Screen
             name="Missions"
             component={ListeMissionsScreen}
-            options={{
-              headerTitle: "Missions",
-            }}
+            options={{ headerTitle: "Missions" }}
           />
           <Stack.Screen
             name="Carte"
             component={CarteMissionsScreen}
-            options={{
-              headerTitle: "Carte",
-            }}
+            options={{ headerTitle: "Carte" }}
           />
           <Stack.Screen
             name="Contact"
             component={ContactsScreen}
-            options={{
-              headerTitle: "Contacts",
-            }}
+            options={{ headerTitle: "Contacts" }}
           />
           <Stack.Screen
             name="Messagerie"
             component={MessagerieScreen}
-            options={{
-              headerTitle: "Messagerie",
-            }}
+            options={{ headerTitle: "Messagerie" }}
           />
           <Stack.Screen
             name="CreateMission"
             component={OrderWizard}
-            options={{
-              headerTitle: "Créer une mission",
-            }}
+            options={{ headerTitle: "Créer une mission" }}
           />
           <Stack.Screen
             name="Orders"
             component={ListeOrderScreen}
-            options={{
-              headerTitle: "Commandes",
-            }}
+            options={{ headerTitle: "Commandes" }}
           />
           <Stack.Screen
             name="Subscription"
             component={SubscriptionScreen}
-            options={{
-              headerTitle: "Les pass Zeno",
-            }}
+            options={{ headerTitle: "Les pass Zeno" }}
           />
           <Stack.Screen
             name="Role"
             component={RoleScreen}
-            options={{
-              headerTitle: "Mes roles",
-            }}
+            options={{ headerTitle: "Mes roles" }}
           />
           <Stack.Screen
             name="Rating"
             component={UserRatingScreen}
-            options={{
-              headerTitle: "Noter un utilisateur",
-            }}
+            options={{ headerTitle: "Noter un utilisateur" }}
           />
         </>
       ) : (
@@ -139,7 +113,7 @@ function AppRoutes() {
             name="Connexion"
             component={ConnexionScreen}
             options={{
-              headerTitle: "Connexion",
+              headerTitle: "",
               headerRight: undefined,
               headerBackTitle: "",
             }}
@@ -148,7 +122,7 @@ function AppRoutes() {
             name="Register"
             component={RegisterScreen}
             options={{
-              headerTitle: "Inscription",
+              headerTitle: "",
               headerRight: undefined,
               headerBackTitle: "",
             }}
@@ -163,6 +137,14 @@ export default function App() {
   const MERCHANT_ID = Constants.expoConfig?.extra?.merchantId;
   const PUBLIC_KEY = Constants.expoConfig?.extra?.publicKey;
 
+  const [fontsLoaded] = useFonts({
+    Nunito: require("./assets/fonts/Nunito-Regular.ttf"),
+    NunitoItalic: require("./assets/fonts/Nunito-Italic.ttf"),
+    NunitoBold: require("./assets/fonts/Nunito-Bold.ttf"),
+    MuseoModerno: require("./assets/fonts/MuseoModerno-Regular.ttf"),
+    MuseoModernoBold: require("./assets/fonts/MuseoModerno-Bold.ttf"),
+  });
+
   useEffect(() => {
     const handleDeepLink = (event: Linking.EventType) => {
       const url = event.url;
@@ -171,7 +153,6 @@ export default function App() {
 
       if (sessionId) {
         console.log("Stripe verification session ID:", sessionId);
-        // Tu peux appeler ton API ici
       }
     };
 
@@ -180,6 +161,14 @@ export default function App() {
       subscription.remove();
     };
   }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <StripeProvider

@@ -11,5 +11,6 @@ export default {
       publicKey: process.env.PUBLIC_KEY,
       merchantDisplayName: process.env.MERCHANT_DISPLAY_NAME,
     },
+    plugins: ["expo-font"],
   },
 };
