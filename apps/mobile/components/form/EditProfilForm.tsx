@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Platform,
   TouchableOpacity,
   Image,
 } from "react-native";
@@ -16,6 +15,7 @@ import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
+import { COLORS } from "../../styles/color"; // 🔥 utilise ta charte
 
 interface EditProfileFormProps {
   initialData: {
@@ -89,13 +89,7 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
       const data = await response.json();
       const identityUrl = data.url;
 
-      // Ouvre Stripe Identity dans un navigateur sécurisé
-      const result = await WebBrowser.openBrowserAsync(identityUrl);
-
-      // Optionnel : écoute une redirection pour savoir si c'est terminé
-      // ou demande à l’utilisateur de revenir dans l’app
-
-      // Une fois terminé (ex. bouton "J'ai fini"), on confirme la vérif
+      await WebBrowser.openBrowserAsync(identityUrl);
       await validateIdentityWithAPI();
     } catch (error: any) {
       Alert.alert("Erreur", error.message || "Échec de la vérification.");
@@ -104,23 +98,6 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
   const handleSubmit = async () => {
     try {
-      const formData = new FormData();
-
-      Object.entries(form).forEach(([key, value]) => {
-        formData.append(key, value ?? "");
-      });
-
-      if (identityDoc) {
-        const uriParts = identityDoc.uri.split(".");
-        const fileType = uriParts[uriParts.length - 1];
-
-        formData.append("pieceIdentite", {
-          uri: identityDoc.uri,
-          name: `identity.${fileType}`,
-          type: `image/${fileType}`,
-        } as any);
-      }
-
       const response = await fetch(`${API_URL}user/update`, {
         method: "PUT",
         headers: {
@@ -182,7 +159,7 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
 
       <TouchableOpacity
         style={styles.roleButton}
-        onPress={() => navigation.navigate("Role" as never)} // if using TypeScript + strict navigation types
+        onPress={() => navigation.navigate("Role" as never)}
       >
         <Text style={styles.linkText}>Voir les rôles</Text>
       </TouchableOpacity>
@@ -194,39 +171,49 @@ const EditProfileForm = ({ initialData, onSubmit }: EditProfileFormProps) => {
         />
       )}
 
-      <Button title="Enregistrer les modifications" onPress={handleSubmit} />
+      <View style={styles.buttonWrapper}>
+        <Button
+          title="Enregistrer les modifications"
+          onPress={handleSubmit}
+          color={COLORS.primaryBlue}
+        />
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 50,
+    padding: 32,
+    backgroundColor: COLORS.background,
     gap: 16,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
+    color: COLORS.primaryBlue,
     alignSelf: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   inputContainer: {
-    gap: 4,
+    gap: 6,
   },
   label: {
     fontWeight: "500",
+    color: COLORS.dark,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
+    borderColor: COLORS.primaryBlue,
+    borderRadius: 10,
+    padding: 12,
     fontSize: 16,
+    backgroundColor: COLORS.card,
   },
   identityButton: {
-    backgroundColor: "#007bff",
-    padding: 12,
-    borderRadius: 6,
+    backgroundColor: COLORS.primaryPink,
+    padding: 14,
+    borderRadius: 8,
     alignItems: "center",
   },
   identityButtonText: {
@@ -234,15 +221,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   roleButton: {
-    backgroundColor: "#6c63ff",
-    padding: 10,
+    backgroundColor: COLORS.secondaryOlive,
+    padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 4,
   },
   linkText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  buttonWrapper: {
+    marginTop: 20,
+    marginBottom: 40,
   },
 });
 

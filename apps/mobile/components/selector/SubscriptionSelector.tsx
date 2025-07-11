@@ -127,7 +127,7 @@ const SubscriptionSelector = () => {
   if (userLoading || !localUser) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={styles.primaryColor.color} />
       </View>
     );
   }
@@ -143,18 +143,41 @@ const SubscriptionSelector = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Gestion des abonnements</Text>
 
-      {!basicSubscription && !premiumSubscription && (
-        <>
-          <Button
-            title="Acheter le pass BASIC"
-            onPress={() => handleSubscription("basic", "subscribe")}
-          />
-          <Button
-            title="Acheter le pass PREMIUM"
-            onPress={() => handleSubscription("premium", "subscribe")}
-          />
-        </>
-      )}
+      <View style={styles.subscriptionContainer}>
+        {!basicSubscription && (
+          <View
+            style={[styles.subscriptionBox, { backgroundColor: "#2f167f" }]}
+          >
+            <Text style={styles.passTitle}>Pass BASIC</Text>
+            <Text style={styles.passDescription}>
+              Accès aux fonctionnalités de base.
+            </Text>
+            <Text style={styles.passPrice}>€5 / mois</Text>
+            <Button
+              title="Acheter le pass BASIC"
+              onPress={() => handleSubscription("basic", "subscribe")}
+              color={styles.fuchsia.color}
+            />
+          </View>
+        )}
+
+        {!premiumSubscription && (
+          <View
+            style={[styles.subscriptionBox, { backgroundColor: "#cb157c" }]}
+          >
+            <Text style={styles.passTitle}>Pass PREMIUM</Text>
+            <Text style={styles.passDescription}>
+              Accès à toutes les fonctionnalités.
+            </Text>
+            <Text style={styles.passPrice}>€15 / mois</Text>
+            <Button
+              title="Acheter le pass PREMIUM"
+              onPress={() => handleSubscription("premium", "subscribe")}
+              color={styles.yellow.color}
+            />
+          </View>
+        )}
+      </View>
 
       {basicSubscription && (
         <>
@@ -164,15 +187,9 @@ const SubscriptionSelector = () => {
           </Text>
           <Button
             title="Se retirer de BASIC"
-            color="red"
+            color={styles.red.color}
             onPress={() => handleSubscription("basic", "unsubscribe")}
           />
-          {!premiumSubscription && (
-            <Button
-              title="Acheter le pass PREMIUM"
-              onPress={() => handleSubscription("premium", "subscribe")}
-            />
-          )}
         </>
       )}
 
@@ -184,19 +201,15 @@ const SubscriptionSelector = () => {
           </Text>
           <Button
             title="Se retirer de Premium"
-            color="red"
+            color={styles.red.color}
             onPress={() => handleSubscription("premium", "unsubscribe")}
           />
-          {!basicSubscription && (
-            <Button
-              title="Acheter le pass BASIC"
-              onPress={() => handleSubscription("basic", "subscribe")}
-            />
-          )}
         </>
       )}
 
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      {loading && (
+        <ActivityIndicator size="large" color={styles.primaryColor.color} />
+      )}
     </View>
   );
 };
@@ -205,16 +218,61 @@ const styles = StyleSheet.create({
   container: {
     padding: 24,
     gap: 16,
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
+    color: "#2f167f", // Bleu nuit
   },
   info: {
     fontSize: 14,
     textAlign: "center",
     marginVertical: 8,
+    color: "#869962", // Vert olive
+  },
+  subscriptionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 20,
+  },
+  subscriptionBox: {
+    padding: 20,
+    borderRadius: 10,
+    width: "45%",
+    justifyContent: "center",
+    alignItems: "center",
+    opacity: 0.9,
+  },
+  passTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  passDescription: {
+    fontSize: 14,
+    color: "#fff",
+    marginBottom: 12,
+  },
+  passPrice: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 16,
+  },
+  primaryColor: {
+    color: "#2f167f",
+  },
+  fuchsia: {
+    color: "#cb157c",
+  },
+  yellow: {
+    color: "#ffb01b",
+  },
+  red: {
+    color: "#ff0000",
   },
 });
 

@@ -23,6 +23,7 @@ import * as Linking from "expo-linking";
 import CustomHeaderRight from "./components/header/CustomHeaderRight";
 import * as Font from "expo-font";
 import { useFonts } from "expo-font";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -42,15 +43,18 @@ function AppRoutes() {
       screenOptions={{
         headerTitle: () => (
           <Image
-            source={require("./assets/logo/logo-base-noir.png")}
+            source={require("./assets/logo/logo-base-blanc.png")}
             style={{ width: 100, height: 40, resizeMode: "contain" }}
           />
         ),
         headerRight: () => <CustomHeaderRight />,
         headerStyle: {
-          backgroundColor: "#f4f4f4",
+          backgroundColor: "#2f167f", // fond bleu nuit
         },
-        headerTintColor: "#333",
+        headerTintColor: "#ffffffff", // texte ou flèches jaune soleil
+        headerTitleAlign: "left",
+        headerShadowVisible: true,
+        headerFontFamily: "MuseoModernoBold",
       }}
     >
       {token ? (
@@ -176,9 +180,11 @@ export default function App() {
       merchantIdentifier={MERCHANT_ID}
     >
       <AuthProvider>
-        <NavigationContainer>
-          <AppRoutes />
-        </NavigationContainer>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <AppRoutes />
+          </NavigationContainer>
+        </SafeAreaProvider>
       </AuthProvider>
     </StripeProvider>
   );

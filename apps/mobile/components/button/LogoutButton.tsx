@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Alert } from "react-native";
+import { Alert, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LogoutButton() {
@@ -18,5 +18,25 @@ export default function LogoutButton() {
     ]);
   };
 
-  return <Button title="Se déconnecter" onPress={handleLogout} />;
+  return (
+    <TouchableOpacity onPress={handleLogout} style={styles.button}>
+      <Text style={styles.text}>Se déconnecter</Text>
+    </TouchableOpacity>
+  );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: "#cb157c", // Rose fuchsia
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  text: {
+    color: "#fff", // Texte blanc
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+});

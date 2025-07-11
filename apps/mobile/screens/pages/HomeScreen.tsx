@@ -95,7 +95,7 @@ export default function HomeScreen({ navigation }: Props) {
         <MenuCard
           label="Carte"
           desc="Carte des missions"
-          onPress={() => navigation.navigate("Map")}
+          onPress={() => navigation.navigate("Carte")}
         />
         <MenuCard
           label="Messagerie"

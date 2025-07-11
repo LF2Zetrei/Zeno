@@ -4,8 +4,9 @@ import {
   Text,
   ActivityIndicator,
   FlatList,
-  Button,
-  Alert,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useMissions } from "../../hooks/mission/useMissions";
@@ -27,8 +28,7 @@ export default function MissionsScreen() {
   const { updateMissionStatus, loading, error, success } = useMissionState();
   const navigation = useNavigation();
   const [missions, setMissions] = useState([]);
-  const [showMyMissions, setShowMyMissions] = useState(false);
-  const [showNearbyMissions, setShowNearbyMissions] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("all"); // "all", "my", "nearby"
   const [radiusKm, setRadiusKm] = useState(10);
 
   const {
@@ -41,13 +41,13 @@ export default function MissionsScreen() {
     setMissions(missionsFromHook);
   }, [missionsFromHook]);
 
-  const handleValidatingMisson = async (missionId) => {
+  const handleValidatingMission = async (missionId) => {
     await updateMissionStatus(missionId, "COMPLETED");
   };
 
   const handleAcceptMission = (missionId) => {
-    setMissions((prevMissions) =>
-      prevMissions.map((m) =>
+    setMissions((prev) =>
+      prev.map((m) =>
         m.idMission === missionId
           ? {
               ...m,
@@ -60,208 +60,214 @@ export default function MissionsScreen() {
     );
   };
 
-  const handleUnassignMission = (missionId) => {
-    setMissions((prevMissions) =>
-      prevMissions.map((m) =>
-        m.idMission === missionId
-          ? {
-              ...m,
-              travelerId: null,
-              travelerPseudo: null,
-              status: "PENDING",
-            }
-          : m
-      )
-    );
-  };
-
-  if (loadingMissions || loadingMyMissions || loadingUser) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
-
-  if (showMyMissions) {
-    return (
-      <View style={{ padding: 20 }}>
-        <Button
-          title="Afficher toutes les missions"
-          onPress={() => setShowMyMissions(false)}
-        />
-        {myMissions.length === 0 ? (
-          <Text>Aucune mission trouvée</Text>
-        ) : (
-          <FlatList
-            data={myMissions}
-            keyExtractor={(item) => item.idMission}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  marginBottom: 15,
-                  padding: 10,
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                  Mission : {item.idMission}
-                </Text>
-                <Text>Commande : {item.orderId}</Text>
-                <Text>Statut : {item.status}</Text>
-                <Text>
-                  Créée le : {new Date(item.createdAt).toLocaleDateString()}
-                </Text>
-                {item.travelerPseudo && (
-                  <Text>Voyageur : {item.travelerPseudo}</Text>
-                )}
-                {item.status != "COMPLETED" && (
-                  <DeliveredMissionButton
-                    missionId={item.idMission}
-                    onSuccess={() => handleValidatingMisson(item.idMission)}
-                  />
-                )}
-                {error && (
-                  <Text style={{ color: "red" }}>Erreur : {error}</Text>
-                )}
-                {success && (
-                  <Text style={{ color: "green" }}>
-                    Mission validée avec succès !
-                  </Text>
-                )}
-              </View>
-            )}
+  const renderMissionCard = (item) => (
+    <View style={styles.missionCard}>
+      <View style={styles.missionCardHeader}>
+        <Text style={styles.missionTitle}>Mission : {item.idMission}</Text>
+        <Text style={styles.missionStatus}>Statut : {item.status}</Text>
+      </View>
+      <Text style={styles.missionText}>Commande : {item.orderId}</Text>
+      <Text style={styles.missionText}>
+        Créée le : {new Date(item.createdAt).toLocaleDateString()}
+      </Text>
+      {item.travelerPseudo && (
+        <Text style={styles.missionText}>Voyageur : {item.travelerPseudo}</Text>
+      )}
+      {item.status !== "COMPLETED" &&
+        String(item.travelerId) === String(user.idUser) && (
+          <DeliveredMissionButton
+            missionId={item.idMission}
+            onSuccess={() => handleValidatingMission(item.idMission)}
           />
         )}
-      </View>
-    );
-  }
-
-  // Affichage pour tous les rôles (USER ou DELIVER)
-  return (
-    <View style={{ padding: 20 }}>
-      <Button
-        title="Afficher mes missions"
-        onPress={() => setShowMyMissions(true)}
-      />
-
-      <Button
-        title={
-          showNearbyMissions
-            ? "Cacher les missions proches"
-            : "Afficher les missions proches"
-        }
-        onPress={() => setShowNearbyMissions(!showNearbyMissions)}
-      />
-
-      {showNearbyMissions && (
-        <View style={{ marginVertical: 15 }}>
-          <Text>Rayon de recherche : {radiusKm} km</Text>
-          <Slider
-            style={{ width: "100%", height: 40 }}
-            minimumValue={1}
-            maximumValue={200}
-            step={1}
-            value={radiusKm}
-            onValueChange={setRadiusKm}
-            minimumTrackTintColor="#1EB1FC"
-            maximumTrackTintColor="#d3d3d3"
-            thumbTintColor="#1EB1FC"
+      {!item.travelerId && selectedTab === "all" && (
+        <View style={{ marginTop: 10 }}>
+          <AcceptMissionButton
+            missionId={item.idMission}
+            onSuccess={() => handleAcceptMission(item.idMission)}
           />
-          {loadingNearby ? (
-            <ActivityIndicator />
-          ) : errorNearby ? (
-            <Text style={{ color: "red" }}>{errorNearby}</Text>
-          ) : nearbyMissions.length === 0 ? (
-            <Text>Aucune mission à proximité</Text>
-          ) : (
-            <FlatList
-              data={nearbyMissions}
-              keyExtractor={(item) => item.idMission}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    marginBottom: 15,
-                    padding: 10,
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                    Mission : {item.idMission}
-                  </Text>
-                  <Text>Commande : {item.orderId}</Text>
-                  <Text>Statut : {item.status}</Text>
-                  <Text>
-                    Créée le : {new Date(item.createdAt).toLocaleDateString()}
-                  </Text>
-                  {item.travelerPseudo && (
-                    <Text>Voyageur : {item.travelerPseudo}</Text>
-                  )}
-                </View>
-              )}
-            />
-          )}
+          <TouchableOpacity
+            style={styles.msgButton}
+            onPress={async () => {
+              const order = await getOrderById(item.orderId);
+              if (order && order.buyer.idUser) {
+                navigation.navigate("Messagerie", {
+                  contactId: order.buyer.idUser,
+                  contactName: order.buyer.pseudo,
+                });
+              } else {
+                alert("Impossible de récupérer l'acheteur.");
+              }
+            }}
+          >
+            <Text style={styles.msgButtonText}>Aller à la messagerie</Text>
+          </TouchableOpacity>
         </View>
-      )}
-
-      {!showNearbyMissions && missions.length === 0 ? (
-        <Text>Aucune mission trouvée</Text>
-      ) : (
-        !showNearbyMissions && (
-          <FlatList
-            data={missions.filter((item) => item.travelerId === null)}
-            keyExtractor={(item) => item.idMission}
-            renderItem={({ item }) => (
-              <View
-                style={{
-                  marginBottom: 15,
-                  padding: 10,
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                  Mission : {item.idMission}
-                </Text>
-                <Text>Commande : {item.orderId}</Text>
-                <Text>Statut : {item.status}</Text>
-                <Text>
-                  Créée le : {new Date(item.createdAt).toLocaleDateString()}
-                </Text>
-                {item.travelerPseudo && (
-                  <Text>Voyageur : {item.travelerPseudo}</Text>
-                )}
-
-                <Text>
-                  {String(item.travelerId) === String(user.idUser) ? null : (
-                    <View style={{ marginTop: 10 }}>
-                      <AcceptMissionButton
-                        missionId={item.idMission}
-                        onSuccess={() => handleAcceptMission(item.idMission)}
-                      />
-                      <Button
-                        title="Aller à la messagerie"
-                        onPress={async () => {
-                          const order = await getOrderById(item.orderId);
-                          console.log(order);
-                          if (order && order.buyer.idUser) {
-                            navigation.navigate("Messagerie", {
-                              contactId: order.buyer.idUser,
-                              contactName: order.buyer.pseudo,
-                            });
-                          } else {
-                            alert(
-                              "Impossible de récupérer l'identifiant de l'acheteur."
-                            );
-                          }
-                        }}
-                      />
-                    </View>
-                  )}
-                </Text>
-              </View>
-            )}
-          />
-        )
       )}
     </View>
   );
+
+  if (loadingMissions || loadingMyMissions || loadingUser) {
+    return <ActivityIndicator size="large" color="#2f167f" />;
+  }
+
+  return (
+    <View style={{ flex: 1, padding: 20, backgroundColor: "#fff" }}>
+      {/* Onglets */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "all" && styles.tabButtonSelected,
+          ]}
+          onPress={() => setSelectedTab("all")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "all" && styles.tabTextSelected,
+            ]}
+          >
+            Toutes les missions
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "my" && styles.tabButtonSelected,
+          ]}
+          onPress={() => setSelectedTab("my")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "my" && styles.tabTextSelected,
+            ]}
+          >
+            Mes missions
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            selectedTab === "nearby" && styles.tabButtonSelected,
+          ]}
+          onPress={() => setSelectedTab("nearby")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "nearby" && styles.tabTextSelected,
+            ]}
+          >
+            Missions proches
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Contenu */}
+      <ScrollView style={{ marginTop: 20 }}>
+        {selectedTab === "my" ? (
+          myMissions.length === 0 ? (
+            <Text>Aucune mission</Text>
+          ) : (
+            myMissions.map(renderMissionCard)
+          )
+        ) : selectedTab === "nearby" ? (
+          <>
+            <Text style={{ marginBottom: 5 }}>
+              Rayon de recherche : {radiusKm} km
+            </Text>
+            <Slider
+              style={{ width: "100%" }}
+              minimumValue={1}
+              maximumValue={200}
+              step={1}
+              value={radiusKm}
+              onValueChange={setRadiusKm}
+              minimumTrackTintColor="#cb157c"
+              maximumTrackTintColor="#ddd"
+              thumbTintColor="#cb157c"
+            />
+            {loadingNearby ? (
+              <ActivityIndicator color="#cb157c" />
+            ) : nearbyMissions.length === 0 ? (
+              <Text>Aucune mission à proximité</Text>
+            ) : (
+              nearbyMissions.map(renderMissionCard)
+            )}
+          </>
+        ) : (
+          missions.filter((m) => m.travelerId === null).map(renderMissionCard)
+        )}
+      </ScrollView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#eee",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  tabButton: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#eee",
+    alignItems: "center",
+  },
+  tabButtonSelected: {
+    backgroundColor: "#2f167f",
+  },
+  tabText: {
+    color: "#2f167f",
+    fontWeight: "600",
+  },
+  tabTextSelected: {
+    color: "#fff",
+  },
+  missionCard: {
+    backgroundColor: "#f9f9f9",
+    borderLeftWidth: 5,
+    borderLeftColor: "#cb157c",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  missionCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  missionTitle: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#050212",
+  },
+  missionStatus: {
+    fontWeight: "600",
+    color: "#869962",
+  },
+  missionText: {
+    color: "#050212",
+    marginVertical: 2,
+  },
+  msgButton: {
+    marginTop: 10,
+    backgroundColor: "#ffb01b",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  msgButtonText: {
+    color: "#050212",
+    fontWeight: "600",
+  },
+});

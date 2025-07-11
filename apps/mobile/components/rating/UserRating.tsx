@@ -19,7 +19,7 @@ const Star = ({
   onPress: () => void;
 }) => (
   <TouchableOpacity onPress={onPress}>
-    <Text style={{ fontSize: 32, color: filled ? "#FFD700" : "#ccc" }}>★</Text>
+    <Text style={{ fontSize: 40, color: filled ? "#FFD700" : "#ccc" }}>★</Text>
   </TouchableOpacity>
 );
 
@@ -74,7 +74,7 @@ const UserRating = ({ userName }: { userName: string }) => {
           />
         ))}
       </View>
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+      {loading && <ActivityIndicator size="large" color="#2f167f" />}
     </View>
   );
 };
@@ -84,14 +84,24 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
     gap: 16,
+    backgroundColor: "#f8f8f8", // Fond gris clair
+    borderRadius: 10,
+    shadowColor: "#000", // Ombre subtile
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
+    color: "#2f167f", // Bleu nuit pour le titre
+    textAlign: "center",
   },
   starsContainer: {
     flexDirection: "row",
     gap: 8,
+    justifyContent: "center",
+    marginVertical: 20,
   },
 });
 
