@@ -57,39 +57,33 @@ export default function RegisterForm() {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/leafs/frise-logo.png")}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <ScrollView contentContainerStyle={styles.overlay}>
-        <Text style={styles.title}>Inscription</Text>
-        <Text style={styles.subtitle}>Rejoins l’univers de l’introuvable</Text>
+    <View>
+      <Text style={styles.title}>Inscription</Text>
+      <Text style={styles.subtitle}>Rejoins l’univers de l’introuvable</Text>
 
-        {Object.entries(form).map(([key, value]) => (
-          <TextInput
-            key={key}
-            style={styles.input}
-            placeholder={getPlaceholder(key)}
-            placeholderTextColor="#ccc"
-            secureTextEntry={key === "password"}
-            value={value}
-            onChangeText={(text) => handleChange(key, text)}
-          />
-        ))}
+      {Object.entries(form).map(([key, value]) => (
+        <TextInput
+          key={key}
+          style={styles.input}
+          placeholder={getPlaceholder(key)}
+          placeholderTextColor="#ccc"
+          secureTextEntry={key === "password"}
+          value={value}
+          onChangeText={(text) => handleChange(key, text)}
+        />
+      ))}
 
-        <Pressable style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>S'inscrire</Text>
-        </Pressable>
+      <Pressable style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>S'inscrire</Text>
+      </Pressable>
 
-        <View style={styles.linkContainer}>
-          <Text style={styles.linkText}>Déjà un compte ? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Connexion")}>
-            <Text style={styles.linkAction}>Je me connecte</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </ImageBackground>
+      <View style={styles.linkContainer}>
+        <Text style={styles.linkText}>Déjà un compte ? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Connexion")}>
+          <Text style={styles.linkAction}>Je me connecte</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
@@ -110,14 +104,6 @@ const getPlaceholder = (key: string) => {
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  overlay: {
-    backgroundColor: "rgba(5, 2, 18, 0.9)",
-    padding: 24,
-    justifyContent: "center",
-  },
   title: {
     fontSize: 32,
     color: "#cb157c",
@@ -168,7 +154,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   linkText: {
-    color: "#ffffffcc",
+    color: "#050212",
     fontSize: 14,
     fontFamily: "Nunito",
   },

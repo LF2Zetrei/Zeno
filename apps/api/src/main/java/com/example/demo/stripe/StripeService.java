@@ -210,7 +210,4 @@ public class StripeService {
 
         return intentResponse; // retourne à la fois ID et clientSecret
     }
-
-
-
 }

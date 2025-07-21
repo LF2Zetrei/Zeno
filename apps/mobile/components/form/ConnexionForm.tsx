@@ -46,57 +46,42 @@ export default function ConnexionForm() {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/leafs/frise-logo.png")} // image avec ambiance exclusive / monde / luxe
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.overlay}>
-        <Text style={styles.title}>ZENO</Text>
-        <Text style={styles.slogan}>Offrez-vous l’introuvable</Text>
+    <View>
+      <Text style={styles.title}>ZENO</Text>
+      <Text style={styles.slogan}>Offrez-vous l’introuvable</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#ccc"
-          value={email}
-          autoCapitalize="none"
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Mot de passe"
-          placeholderTextColor="#ccc"
-          value={password}
-          secureTextEntry
-          onChangeText={setPassword}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#ccc"
+        value={email}
+        autoCapitalize="none"
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Mot de passe"
+        placeholderTextColor="#ccc"
+        value={password}
+        secureTextEntry
+        onChangeText={setPassword}
+      />
 
-        <Pressable style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Se connecter</Text>
-        </Pressable>
+      <Pressable style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Se connecter</Text>
+      </Pressable>
 
-        <View style={styles.linkContainer}>
-          <Text style={styles.text}>Pas encore de compte ? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.linkText}>Je m'inscris</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.linkContainer}>
+        <Text style={styles.text}>Pas encore de compte ? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.linkText}>Je m'inscris</Text>
+        </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(5, 2, 18, 0.9)", // obscurcissement doux
-    padding: 24,
-    justifyContent: "center",
-  },
   title: {
     fontSize: 36,
     fontFamily: "MuseoModernoBold",
@@ -147,7 +132,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   text: {
-    color: "#ffffffcc",
+    color: "#050212",
     fontSize: 14,
     fontFamily: "Nunito",
   },
