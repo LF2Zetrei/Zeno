@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import CreateProductForm from "../form/CreateProductForm";
 import { useProducts } from "../../hooks/product/useProducts";
+import { COLORS } from "../../styles/color";
 
 type Props = {
   onProductSelected: (product: any) => void;
@@ -24,55 +26,84 @@ export default function SelectOrCreateProductStep({
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text>Chargement des produits...</Text>
+        <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+        <Text style={styles.loadingText}>Chargement des produits...</Text>
       </View>
     );
   }
 
   return (
-    <View>
-      <Text>Étape 2 : Choisir ou créer un produit</Text>
-      <CreateProductForm onProductCreated={onProductSelected} />
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Étape 2 : Choisir ou créer un produit</Text>
 
-      <Text style={styles.subtitle}>Ou choisir un produit existant :</Text>
+        <CreateProductForm onProductCreated={onProductSelected} />
 
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.idProduct?.toString()}
-        renderItem={({ item }) => (
+        <Text style={styles.sectionTitle}>
+          Ou choisir un produit existant :
+        </Text>
+
+        {products.map((item) => (
           <TouchableOpacity
+            key={item.idProduct}
             style={[
               styles.productItem,
               selectedProductId === item.idProduct && styles.selectedProduct,
             ]}
             onPress={() => onProductSelected(item)}
           >
-            <Text>{item.name}</Text>
+            <Text style={styles.productText}>{item.name}</Text>
           </TouchableOpacity>
-        )}
-      />
-    </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {},
+  scrollContainer: {
+    paddingBottom: 100,
+  },
   center: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  subtitle: {
-    fontWeight: "bold",
-    marginTop: 20,
+  loadingText: {
+    marginTop: 10,
+    fontFamily: "Nunito",
+    fontSize: 14,
+  },
+  title: {
+    fontSize: 20,
+    fontFamily: "MuseoModernoBold",
+    color: COLORS.primaryBlue,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "NunitoBold",
+    color: COLORS.primaryPink,
+    marginTop: 30,
+    marginBottom: 10,
+  },
+  listContainer: {
+    gap: 10,
   },
   productItem: {
-    padding: 10,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPink,
   },
   selectedProduct: {
-    backgroundColor: "#ddd",
+    backgroundColor: COLORS.primaryPink,
+  },
+  productText: {
+    fontFamily: "Nunito",
+    color: COLORS.primaryBlue,
   },
 });

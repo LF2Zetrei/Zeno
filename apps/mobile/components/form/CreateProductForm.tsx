@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../styles/color";
 
 type Product = {
   name: string;
@@ -37,7 +38,7 @@ export default function CreateProductForm({ onProductCreated }: Props) {
   const { token } = useAuth();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
 
-  const handleChange = (key: string, value: string) => {
+  const handleChange = (key: keyof Product, value: string) => {
     const cleaned = value.replace(",", ".");
     setForm({ ...form, [key]: cleaned });
   };
@@ -61,12 +62,7 @@ export default function CreateProductForm({ onProductCreated }: Props) {
 
       const data = await res.json();
       Alert.alert("Succès", "Produit créé avec succès !");
-      console.log("Produit créé :", data);
-
-      // Callback si défini
-      if (onProductCreated) {
-        onProductCreated(data);
-      }
+      onProductCreated?.(data);
     } catch (err) {
       console.error(err);
       Alert.alert("Erreur", "Échec de la requête.");
@@ -75,6 +71,8 @@ export default function CreateProductForm({ onProductCreated }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.sectionTitle}>Créer un produit</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Nom du produit"
@@ -115,20 +113,42 @@ export default function CreateProductForm({ onProductCreated }: Props) {
         onChangeText={(text) => handleChange("estimatedPrice", text)}
       />
 
-      <Button title="Créer le produit" onPress={handleCreateProduct} />
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Créer le produit"
+          onPress={handleCreateProduct}
+          color={COLORS.primaryPink}
+        />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 20,
     gap: 12,
+    borderColor: COLORS.primaryPink,
+    borderWidth: 1,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "NunitoBold",
+    color: COLORS.primaryPink,
+    marginBottom: 10,
   },
   input: {
     borderColor: "#ccc",
     borderWidth: 1,
-    padding: 8,
-    borderRadius: 6,
+    padding: 10,
+    borderRadius: 8,
+    fontFamily: "Nunito",
+    backgroundColor: "#fff",
+  },
+  buttonContainer: {
+    marginTop: 20,
   },
 });

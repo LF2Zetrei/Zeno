@@ -19,7 +19,7 @@ export default function ConnexionForm() {
   const navigation = useNavigation();
   const { login } = useAuth();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
-
+  console.log(API_URL);
   const handleLogin = async () => {
     try {
       const res = await fetch(`${API_URL}auth/login`, {

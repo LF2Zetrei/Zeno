@@ -3,15 +3,16 @@ import {
   View,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   Alert,
+  StyleSheet,
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
 import { useProductsInOrder } from "../../hooks/order/getProductsByOrder";
 import DeleteProductFromOrderButton from "../button/DeleteProductFromOrderButton";
+import { COLORS } from "../../styles/color";
 
 interface EditOrderFormProps {
   orderId: string;
@@ -33,6 +34,7 @@ const EditOrderForm = ({
   const { token } = useAuth();
   const { products, loading } = useProductsInOrder(orderId);
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
+
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm({ ...form, [field]: value });
   };
@@ -64,120 +66,146 @@ const EditOrderForm = ({
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Modifier la commande</Text>
+      <View style={styles.card}>
+        <Text style={styles.title}>Modifier la commande</Text>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Adresse d'achat</Text>
-        <TextInput
-          style={styles.input}
-          value={form.purchaseAddress ?? ""}
-          onChangeText={(text) => handleChange("purchaseAddress", text)}
-          placeholder="456 avenue des créateurs"
-        />
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Adresse d'achat</Text>
+          <TextInput
+            style={styles.input}
+            value={form.purchaseAddress ?? ""}
+            onChangeText={(text) => handleChange("purchaseAddress", text)}
+            placeholder="456 avenue des créateurs"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Pays d'achat</Text>
+          <TextInput
+            style={styles.input}
+            value={form.purchaseCountry ?? ""}
+            onChangeText={(text) => handleChange("purchaseCountry", text)}
+            placeholder="Belgique"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Date limite (YYYY-MM-DD)</Text>
+          <TextInput
+            style={styles.input}
+            value={form.deadline ?? ""}
+            onChangeText={(text) => handleChange("deadline", text)}
+            placeholder="2025-07-15"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Nom de l'artisan</Text>
+          <TextInput
+            style={styles.input}
+            value={form.artisanName ?? ""}
+            onChangeText={(text) => handleChange("artisanName", text)}
+            placeholder="Marie Dubois"
+          />
+        </View>
+
+        <View style={styles.productsContainer}>
+          <Text style={styles.sectionTitle}>Produits dans la commande</Text>
+
+          {loading ? (
+            <Text>Chargement des produits...</Text>
+          ) : products.length === 0 ? (
+            <Text>Aucun produit dans cette commande.</Text>
+          ) : (
+            products.map((product) => (
+              <View key={product.id} style={styles.productCard}>
+                <Text style={styles.productText}>
+                  {product.name || "Produit"} - {product.price} €
+                </Text>
+                <DeleteProductFromOrderButton
+                  orderId={orderId}
+                  productId={product.idProduct}
+                />
+              </View>
+            ))
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Enregistrer les modifications</Text>
+        </TouchableOpacity>
       </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Pays d'achat</Text>
-        <TextInput
-          style={styles.input}
-          value={form.purchaseCountry ?? ""}
-          onChangeText={(text) => handleChange("purchaseCountry", text)}
-          placeholder="Belgique"
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Date limite (YYYY-MM-DD)</Text>
-        <TextInput
-          style={styles.input}
-          value={form.deadline ?? ""}
-          onChangeText={(text) => handleChange("deadline", text)}
-          placeholder="2025-07-15"
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Nom de l'artisan</Text>
-        <TextInput
-          style={styles.input}
-          value={form.artisanName ?? ""}
-          onChangeText={(text) => handleChange("artisanName", text)}
-          placeholder="Marie Dubois"
-        />
-      </View>
-
-      <View style={styles.productsContainer}>
-        <Text style={styles.subtitle}>Produits dans la commande</Text>
-
-        {loading ? (
-          <Text>Chargement des produits...</Text>
-        ) : products.length === 0 ? (
-          <Text>Aucun produit dans cette commande.</Text>
-        ) : (
-          products.map((product) => (
-            <View key={product.id} style={styles.productItem}>
-              <Text style={styles.productText}>
-                {product.name || "Produit"} - {product.price} €
-              </Text>
-              <DeleteProductFromOrderButton
-                orderId={orderId}
-                productId={product.idProduct}
-              />
-            </View>
-          ))
-        )}
-      </View>
-
-      <Button title="Enregistrer les modifications" onPress={handleSubmit} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    padding: 20,
+  },
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
     padding: 16,
-    gap: 16,
+    marginBottom: 15,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPink,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: "flex-start",
   },
   title: {
-    fontSize: 20,
     fontWeight: "bold",
-    alignSelf: "center",
+    fontSize: 18,
+    color: COLORS.primaryBlue,
+    marginBottom: 16,
   },
-  inputContainer: {
+  inputGroup: {
     marginBottom: 12,
+    width: "100%",
   },
   label: {
     fontWeight: "500",
     marginBottom: 4,
+    color: COLORS.dark,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    padding: 8,
+    padding: 10,
+    backgroundColor: "#fff",
   },
-  productsContainer: {
-    marginVertical: 16,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "#f9f9f9",
-  },
-  subtitle: {
-    fontSize: 16,
+  sectionTitle: {
     fontWeight: "bold",
+    fontSize: 16,
     marginBottom: 8,
+    color: COLORS.primaryPink,
   },
-  productItem: {
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  productCard: {
+    backgroundColor: "#e9e9f0",
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 10,
   },
   productText: {
     fontSize: 14,
     marginBottom: 4,
+  },
+  button: {
+    backgroundColor: COLORS.primaryPink,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+    width: "100%",
+  },
+  buttonText: {
+    color: COLORS.background,
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
 

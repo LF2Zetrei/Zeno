@@ -7,6 +7,7 @@ import SelectOrCreateProductStep from "../../components/step/SelectOrCreateProdu
 import AddProductToOrderStep from "../../components/step/AddProductToOrderStep";
 import SummaryStep from "../../components/step/SummaryStep";
 import { useRoute } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OrderWizard() {
   const route = useRoute();
@@ -32,27 +33,29 @@ export default function OrderWizard() {
 
   return (
     <View style={styles.container}>
-      {step === 1 && <CreateOrderStep onOrderCreated={handleOrderCreated} />}
-      {step === 2 && (
-        <SelectOrCreateProductStep
-          onProductSelected={handleProductCreated}
-          selectedProductId={productId}
-        />
-      )}
-      {step === 3 && orderId && productId && (
-        <AddProductToOrderStep
-          orderId={orderId}
-          productId={productId}
-          onSuccess={() => setStep(4)}
-        />
-      )}
-      {step === 4 && orderId && productId && (
-        <SummaryStep
-          orderId={orderId}
-          productId={productId}
-          onSuccess={handleSuccess}
-        />
-      )}
+      <SafeAreaView>
+        {step === 1 && <CreateOrderStep onOrderCreated={handleOrderCreated} />}
+        {step === 2 && (
+          <SelectOrCreateProductStep
+            onProductSelected={handleProductCreated}
+            selectedProductId={productId}
+          />
+        )}
+        {step === 3 && orderId && productId && (
+          <AddProductToOrderStep
+            orderId={orderId}
+            productId={productId}
+            onSuccess={() => setStep(4)}
+          />
+        )}
+        {step === 4 && orderId && productId && (
+          <SummaryStep
+            orderId={orderId}
+            productId={productId}
+            onSuccess={handleSuccess}
+          />
+        )}
+      </SafeAreaView>
     </View>
   );
 }

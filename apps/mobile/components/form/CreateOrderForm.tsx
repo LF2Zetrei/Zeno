@@ -6,20 +6,23 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
+  Text,
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../styles/color";
 
 type OrderForm = {
   purchaseAddress: string;
   purchaseCountry: string;
-  deadline: string; // format YYYY-MM-DD
+  deadline: string;
   artisanName: string;
   city: string;
+  transports?: string;
 };
 
 type Props = {
-  onOrderCreated?: (product: any) => void; // le backend retourne un "produit"
+  onOrderCreated?: (product: any) => void;
 };
 
 export default function CreateOrderForm({ onOrderCreated }: Props) {
@@ -29,6 +32,7 @@ export default function CreateOrderForm({ onOrderCreated }: Props) {
     deadline: "",
     artisanName: "",
     city: "",
+    transports: "",
   });
 
   const { token } = useAuth();
@@ -54,27 +58,33 @@ export default function CreateOrderForm({ onOrderCreated }: Props) {
         body: JSON.stringify(form),
       });
 
+      const rawText = await res.text(); // <-- lis brut, avant json()
+      console.log("Réponse brute : ", rawText);
+
       if (!res.ok) {
-        const error = await res.json();
-        Alert.alert("Erreur", error.message || "Erreur lors de la création.");
+        try {
+          const error = JSON.parse(rawText); // essaie de parser quand même
+          Alert.alert("Erreur", error.message || "Erreur lors de la création.");
+        } catch (e) {
+          Alert.alert("Erreur", "Réponse non JSON : " + rawText);
+        }
         return;
       }
 
-      const product = await res.json();
+      const product = JSON.parse(rawText); // si OK, parsé comme JSON
       Alert.alert("Succès", "Commande créée avec succès !");
       console.log("Produit créé :", product);
-
-      if (onOrderCreated) {
-        onOrderCreated(product);
-      }
+      onOrderCreated?.(product);
     } catch (err) {
-      console.error(err);
+      console.error("Erreur brute :", err);
       Alert.alert("Erreur", "Échec de la requête.");
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.sectionTitle}>Informations de commande</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Adresse d'achat"
@@ -107,25 +117,47 @@ export default function CreateOrderForm({ onOrderCreated }: Props) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Transports de livraisons autorisés : train, avion, voiture, bateau ...."
+        placeholder="Transports autorisés (train, avion...)"
         value={form.transports}
         onChangeText={(text) => handleChange("transports", text)}
       />
 
-      <Button title="Créer la commande" onPress={handleCreateOrder} />
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Créer la commande"
+          color={COLORS.primaryPink}
+          onPress={handleCreateOrder}
+        />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 50,
+    padding: 20,
     gap: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    borderColor: COLORS.primaryPink,
+    borderWidth: 1,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "NunitoBold",
+    color: COLORS.primaryPink,
+    marginBottom: 10,
   },
   input: {
     borderColor: "#ccc",
     borderWidth: 1,
-    padding: 8,
-    borderRadius: 6,
+    padding: 10,
+    borderRadius: 8,
+    fontFamily: "Nunito",
+    backgroundColor: "#fff",
+  },
+  buttonContainer: {
+    marginTop: 20,
   },
 });

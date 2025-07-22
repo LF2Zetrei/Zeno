@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
+import { COLORS } from "../../styles/color";
 
 type Props = {
   orderIda: string;
@@ -57,16 +58,16 @@ const AddProductToOrderButton = ({
         title="Ajouter le produit à la commande"
         onPress={handleAddProduct}
         disabled={loading}
-        color="#228B22"
+        color={COLORS.primaryPink}
       />
-      {loading && <ActivityIndicator color="#228B22" />}
+      {loading && <ActivityIndicator color={COLORS.primaryPink} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    margin: 16,
+    marginTop: 10,
     padding: 16,
     backgroundColor: "#fff",
     borderRadius: 8,

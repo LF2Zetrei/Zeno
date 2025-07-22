@@ -2,15 +2,17 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Button,
   Alert,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
+import { useActualiserPositionTracking } from "../../hooks/position/useRTefreshPosition";
+import { COLORS } from "../../styles/color";
 
-const ReceivedMissionButton = ({
+const AcceptMissionButton = ({
   missionId,
   onSuccess,
 }: {
@@ -19,15 +21,16 @@ const ReceivedMissionButton = ({
 }) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { actualiserPosition } = useActualiserPositionTracking();
 
-  const handleReceived = () => {
+  const handleAcceptMission = () => {
     Alert.alert(
-      "Confirmer la reception de la commande",
-      "Avez-vous vraiment reçu la commande ?",
+      "Confirmer l'acceptation de la mission",
+      "⚠️ Une fois cette mission acceptée, vous serez responsable de sa livraison. Veuillez vous assurer d'avoir discuté avec l'acheteur avant de confirmer.\n\nSouhaitez-vous devenir le livreur ?",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Confirmer",
+          text: "Accepter la mission",
           style: "destructive",
           onPress: async () => {
             setLoading(true);
@@ -36,21 +39,26 @@ const ReceivedMissionButton = ({
               const url = `${API_URL.replace(
                 /\/$/,
                 ""
-              )}/mission/${missionId}/received`;
+              )}/mission/${missionId}/assign`;
 
               const response = await fetch(url, {
-                method: "PUT",
+                method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
               });
 
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                  errorData.message || "Échec de la comfirmation"
+                  errorData.message || "Échec de l’assignation de la mission"
                 );
               }
 
-              Alert.alert("La commande à bien été reçue.");
+              await actualiserPosition(missionId);
+
+              Alert.alert(
+                "🎉 Mission acceptée",
+                "Vous êtes maintenant assigné à cette mission."
+              );
               if (onSuccess) onSuccess();
             } catch (error: any) {
               Alert.alert("Erreur", error.message);
@@ -65,31 +73,46 @@ const ReceivedMissionButton = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.warning}>
-        Tu ne pourras plus changer la comfirmation de la reception.
-      </Text>
-      <Button
-        title="Comfrimer la reception"
-        onPress={handleReceived}
-        color="#d11a2a"
+      <Text style={styles.warning}>Tu seras responsable de cette mission.</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
+        onPress={handleAcceptMission}
         disabled={loading}
-      />
-      {loading && <ActivityIndicator color="#d11a2a" />}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Chargement..." : "Accepter la mission"}
+        </Text>
+      </TouchableOpacity>
+      {loading && <ActivityIndicator color={COLORS.primaryPink} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    gap: 16,
-    alignItems: "center",
+    paddingVertical: 8,
+    marginBottom: 10,
   },
   warning: {
     fontSize: 14,
     color: "#000",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: COLORS.primaryPink,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: COLORS.background,
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
 
-export default ReceivedMissionButton;
+export default AcceptMissionButton;

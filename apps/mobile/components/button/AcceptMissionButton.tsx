@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Button,
   Alert,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
 import { useActualiserPositionTracking } from "../../hooks/position/useRTefreshPosition";
+import { COLORS } from "../../styles/color";
 
 const AcceptMissionButton = ({
   missionId,
@@ -50,7 +51,6 @@ const AcceptMissionButton = ({
                 throw new Error(errorData.message || "Échec de l’assignation");
               }
 
-              // ✅ Mise à jour immédiate de la position
               await actualiserPosition(missionId);
 
               Alert.alert(
@@ -75,26 +75,49 @@ const AcceptMissionButton = ({
   return (
     <View style={styles.container}>
       <Text style={styles.warning}>Tu seras responsable de cette mission.</Text>
-      <Button
-        title="Accepter la mission"
+      <TouchableOpacity
+        style={styles.acceptButton}
         onPress={handleAcceptMission}
         disabled={loading}
-      />
-      {loading && <ActivityIndicator color="#0000ff" />}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.acceptButtonText}>
+          {loading ? "Chargement..." : "Accepter la mission"}
+        </Text>
+        {loading && (
+          <ActivityIndicator color="#fff" style={{ marginLeft: 8 }} />
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    gap: 16,
+    marginVertical: 10,
     alignItems: "center",
+    width: "100%",
   },
   warning: {
     fontSize: 14,
     color: "#000",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  acceptButton: {
+    backgroundColor: COLORS.primaryPink,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  acceptButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 

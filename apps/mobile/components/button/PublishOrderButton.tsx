@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import {
   View,
-  Button,
+  Text,
   Alert,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
 import { useStripe } from "@stripe/stripe-react-native";
+import { COLORS } from "../../styles/color";
 
 type Props = {
   orderId: string | null;
@@ -30,24 +32,17 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
 
     try {
       const API_URL = Constants.expoConfig?.extra?.apiUrl;
-      console.log("API_URL:", API_URL);
-      console.log("orderId:", orderId);
-      // 1. Appel à /pay_mission/{orderId}
-      console.log("👉 Étape 1: Appel à /pay_mission");
-
       const res = await fetch(`${API_URL}payment/pay_mission/${orderId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("✅ Réponse de /pay_mission :", res);
+
       if (!res.ok) throw new Error("Échec de l'initialisation du paiement.");
 
       const { clientSecret } = await res.json();
-      console.log("🔑 clientSecret reçu :", clientSecret);
-      const chalk = require("chalk");
-      // 2. Initialiser le PaymentSheet
+
       const merchantDisplayName =
         Constants.expoConfig?.extra?.merchantDisplayName || "Zeno";
 
@@ -56,19 +51,13 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
         merchantDisplayName,
       });
 
-      if (initError) {
-        console.log("Stripe initPaymentSheet error:", initError);
-        throw new Error(initError.message);
-      }
+      if (initError) throw new Error(initError.message);
 
-      // 3. Présenter le PaymentSheet
       const { error: paymentError } = await presentPaymentSheet();
 
       if (paymentError) throw new Error(paymentError.message);
 
-      // 4. Valider et publier la commande
-      const url = `${API_URL}order/${orderId}/public`;
-      const response = await fetch(url, {
+      const response = await fetch(`${API_URL}order/${orderId}/public`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,7 +70,6 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
       Alert.alert("Succès", "Commande validée et rendue publique.");
       onSuccess?.();
     } catch (error: any) {
-      console.error("❌ Erreur dans handlePublishOrder :", error);
       Alert.alert("Erreur", error.message || "Une erreur est survenue.");
     } finally {
       setLoading(false);
@@ -90,24 +78,37 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
 
   return (
     <View style={styles.container}>
-      <Button
-        title="Valider et publier la commande"
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
         onPress={handlePublishOrder}
         disabled={loading}
-        color="#0066CC"
-      />
-      {loading && <ActivityIndicator color="#0066CC" />}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Chargement..." : "Valider et publier la commande"}
+        </Text>
+      </TouchableOpacity>
+      {loading && <ActivityIndicator color={COLORS.primaryPink} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: "#fff",
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: COLORS.primaryPink,
+    paddingVertical: 12,
     borderRadius: 8,
-    elevation: 2,
+    alignItems: "center",
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: COLORS.background,
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
 

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ActivityIndicator,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -19,27 +18,61 @@ import { useNearbyMissions } from "../../hooks/mission/getMissionsNearby";
 import DeliveredMissionButton from "../../components/button/DeliveredMissionButton";
 import { useNavigation } from "@react-navigation/native";
 import { getOrderById } from "../../utils/getOrderById";
+import { getProductsByOrder } from "../../utils/getProductsByOrder";
+
+// Import des couleurs
+import { COLORS } from "../../styles/color";
 
 export default function MissionsScreen() {
   const { missions: missionsFromHook, loading: loadingMissions } =
     useMissions();
   const { missions: myMissions, loading: loadingMyMissions } = useMyMissions();
   const { user, loading: loadingUser } = useUserByJwt();
-  const { updateMissionStatus, loading, error, success } = useMissionState();
-  const navigation = useNavigation();
-  const [missions, setMissions] = useState([]);
-  const [selectedTab, setSelectedTab] = useState("all"); // "all", "my", "nearby"
+  const { updateMissionStatus } = useMissionState();
   const [radiusKm, setRadiusKm] = useState(10);
+  const { missions: nearbyMissions, loading: loadingNearby } =
+    useNearbyMissions(radiusKm);
+  const navigation = useNavigation();
 
-  const {
-    missions: nearbyMissions,
-    loading: loadingNearby,
-    error: errorNearby,
-  } = useNearbyMissions(radiusKm);
+  const [missions, setMissions] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [ordersById, setOrdersById] = useState({});
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Pour gérer quelle carte est ouverte
+  const [expandedMissionId, setExpandedMissionId] = useState(null);
 
   useEffect(() => {
     setMissions(missionsFromHook);
   }, [missionsFromHook]);
+
+  useEffect(() => {
+    const fetchOrdersWithProducts = async () => {
+      setLoadingOrders(true);
+      const updatedOrders = {};
+
+      for (const mission of missions) {
+        const orderId = mission.orderId;
+        const order = await getOrderById(orderId);
+        if (order) {
+          try {
+            const products = await getProductsByOrder(orderId);
+            updatedOrders[orderId] = { ...order, products };
+          } catch (e) {
+            console.warn("Erreur lors du chargement des produits :", e);
+            updatedOrders[orderId] = { ...order, products: [] };
+          }
+        }
+      }
+
+      setOrdersById(updatedOrders);
+      setLoadingOrders(false);
+    };
+
+    if (missions.length > 0) {
+      fetchOrdersWithProducts();
+    }
+  }, [missions]);
 
   const handleValidatingMission = async (missionId) => {
     await updateMissionStatus(missionId, "COMPLETED");
@@ -60,109 +93,182 @@ export default function MissionsScreen() {
     );
   };
 
-  const renderMissionCard = (item) => (
-    <View style={styles.missionCard}>
-      <View style={styles.missionCardHeader}>
-        <Text style={styles.missionTitle}>Mission : {item.idMission}</Text>
-        <Text style={styles.missionStatus}>Statut : {item.status}</Text>
-      </View>
-      <Text style={styles.missionText}>Commande : {item.orderId}</Text>
-      <Text style={styles.missionText}>
-        Créée le : {new Date(item.createdAt).toLocaleDateString()}
-      </Text>
-      {item.travelerPseudo && (
-        <Text style={styles.missionText}>Voyageur : {item.travelerPseudo}</Text>
-      )}
-      {item.status !== "COMPLETED" &&
-        String(item.travelerId) === String(user.idUser) && (
-          <DeliveredMissionButton
-            missionId={item.idMission}
-            onSuccess={() => handleValidatingMission(item.idMission)}
-          />
-        )}
-      {!item.travelerId && selectedTab === "all" && (
-        <View style={{ marginTop: 10 }}>
-          <AcceptMissionButton
-            missionId={item.idMission}
-            onSuccess={() => handleAcceptMission(item.idMission)}
-          />
-          <TouchableOpacity
-            style={styles.msgButton}
-            onPress={async () => {
-              const order = await getOrderById(item.orderId);
-              if (order && order.buyer.idUser) {
-                navigation.navigate("Messagerie", {
-                  contactId: order.buyer.idUser,
-                  contactName: order.buyer.pseudo,
-                });
-              } else {
-                alert("Impossible de récupérer l'acheteur.");
-              }
-            }}
-          >
-            <Text style={styles.msgButtonText}>Aller à la messagerie</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
+  const toggleExpand = (missionId) => {
+    setExpandedMissionId(expandedMissionId === missionId ? null : missionId);
+  };
 
-  if (loadingMissions || loadingMyMissions || loadingUser) {
-    return <ActivityIndicator size="large" color="#2f167f" />;
+  const renderMissionCard = (item) => {
+    const order = ordersById[item.orderId];
+    const isExpanded = expandedMissionId === item.idMission;
+
+    // Pour la carte, on prend le premier produit si dispo
+    const firstProduct = order?.products?.[0];
+
+    return (
+      <TouchableOpacity
+        key={item.idMission}
+        style={styles.missionCard}
+        activeOpacity={0.8}
+        onPress={() => toggleExpand(item.idMission)}
+      >
+        {!isExpanded ? (
+          // Version fermée : titre, prix, ville
+          <>
+            <Text style={styles.missionTitle}>
+              {firstProduct ? firstProduct.name : "Produit inconnu"}
+            </Text>
+            <Text style={styles.missionPrice}>
+              Prix estimé :{" "}
+              {firstProduct ? firstProduct.estimatedPrice + " €" : "N/A"}
+            </Text>
+            <Text style={styles.missionCity}>
+              Ville : {order?.city || "Inconnue"}
+            </Text>
+          </>
+        ) : (
+          // Version ouverte avec toutes les infos
+          <>
+            {/* Section Mission */}
+            <Text style={styles.sectionTitle}>Mission</Text>
+            <Text style={styles.missionText}>ID : {item.idMission}</Text>
+            <Text style={styles.missionText}>Statut : {item.status}</Text>
+            <Text style={styles.missionText}>
+              Créée le : {new Date(item.createdAt).toLocaleDateString()}
+            </Text>
+            {item.travelerPseudo && (
+              <Text style={styles.missionText}>
+                Voyageur : {item.travelerPseudo}
+              </Text>
+            )}
+
+            {/* Section Commande */}
+            {order && (
+              <>
+                <Text style={styles.sectionTitle}>Commande</Text>
+                <Text style={styles.missionText}>ID : {order.id}</Text>
+                <Text style={styles.missionText}>
+                  Acheteur : {order.buyer?.pseudo}
+                </Text>
+                <Text style={styles.missionText}>
+                  Deadline : {new Date(order.deadline).toLocaleDateString()}
+                </Text>
+                <Text style={styles.missionText}>
+                  Estimation : {order.priceEstimation} €
+                </Text>
+                <Text style={styles.missionText}>
+                  Adresse achat : {order.purchaseAddress}
+                </Text>
+                <Text style={styles.missionText}>
+                  Pays d'achat : {order.purchaseCountry}
+                </Text>
+                <Text style={styles.missionText}>Ville : {order.city}</Text>
+                <Text style={styles.missionText}>
+                  Artisan : {order.artisanName}
+                </Text>
+              </>
+            )}
+
+            {/* Section Produit */}
+            {order?.products?.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Produit(s)</Text>
+                {order.products.map((product, index) => (
+                  <View
+                    key={index}
+                    style={{ marginLeft: 10, marginBottom: 10 }}
+                  >
+                    <Text style={styles.missionText}>Nom : {product.name}</Text>
+                    <Text style={styles.missionText}>
+                      Description : {product.description}
+                    </Text>
+                    <Text style={styles.missionText}>
+                      Poids : {product.weight} kg
+                    </Text>
+                    <Text style={styles.missionText}>
+                      Quantité : {product.quantity}
+                    </Text>
+                    <Text style={styles.missionText}>
+                      Prix estimé : {product.estimatedPrice} €
+                    </Text>
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Boutons côte à côte */}
+            <View style={styles.buttonRow}>
+              {item.status !== "COMPLETED" &&
+                String(item.travelerId) === String(user.idUser) && (
+                  <DeliveredMissionButton
+                    missionId={item.idMission}
+                    onSuccess={() => handleValidatingMission(item.idMission)}
+                    style={styles.button}
+                  />
+                )}
+
+              {!item.travelerId && selectedTab === "all" && (
+                <View style={{ marginTop: 10 }}>
+                  <AcceptMissionButton
+                    missionId={item.idMission}
+                    onSuccess={() => handleAcceptMission(item.idMission)}
+                  />
+                  <TouchableOpacity
+                    style={styles.msgButton}
+                    onPress={() => {
+                      if (order?.buyer?.idUser) {
+                        navigation.navigate("Messagerie", {
+                          contactId: order.buyer.idUser,
+                          contactName: order.buyer.pseudo,
+                        });
+                      } else {
+                        alert("Impossible de récupérer l'acheteur.");
+                      }
+                    }}
+                  >
+                    <Text style={styles.msgButtonText}>
+                      Aller à la messagerie
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  if (loadingMissions || loadingMyMissions || loadingUser || loadingOrders) {
+    return <ActivityIndicator size="large" color={COLORS.primaryBlue} />;
   }
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: "#fff" }}>
+    <View style={{ flex: 1, padding: 20, backgroundColor: COLORS.background }}>
       {/* Onglets */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            selectedTab === "all" && styles.tabButtonSelected,
-          ]}
-          onPress={() => setSelectedTab("all")}
-        >
-          <Text
+        {["all", "my", "nearby"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
             style={[
-              styles.tabText,
-              selectedTab === "all" && styles.tabTextSelected,
+              styles.tabButton,
+              selectedTab === tab && styles.tabButtonSelected,
             ]}
+            onPress={() => setSelectedTab(tab)}
           >
-            Toutes les missions
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            selectedTab === "my" && styles.tabButtonSelected,
-          ]}
-          onPress={() => setSelectedTab("my")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "my" && styles.tabTextSelected,
-            ]}
-          >
-            Mes missions
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            selectedTab === "nearby" && styles.tabButtonSelected,
-          ]}
-          onPress={() => setSelectedTab("nearby")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "nearby" && styles.tabTextSelected,
-            ]}
-          >
-            Missions proches
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === tab && styles.tabTextSelected,
+              ]}
+            >
+              {tab === "all"
+                ? "Toutes les missions"
+                : tab === "my"
+                ? "Mes missions"
+                : "Missions proches"}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Contenu */}
@@ -185,12 +291,12 @@ export default function MissionsScreen() {
               step={1}
               value={radiusKm}
               onValueChange={setRadiusKm}
-              minimumTrackTintColor="#cb157c"
+              minimumTrackTintColor={COLORS.primaryPink}
               maximumTrackTintColor="#ddd"
-              thumbTintColor="#cb157c"
+              thumbTintColor={COLORS.primaryPink}
             />
             {loadingNearby ? (
-              <ActivityIndicator color="#cb157c" />
+              <ActivityIndicator color={COLORS.primaryPink} />
             ) : nearbyMissions.length === 0 ? (
               <Text>Aucune mission à proximité</Text>
             ) : (
@@ -216,58 +322,79 @@ const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#eee",
+    backgroundColor: "#ccc",
     alignItems: "center",
   },
   tabButtonSelected: {
-    backgroundColor: "#2f167f",
+    backgroundColor: COLORS.primaryPink,
   },
   tabText: {
-    color: "#2f167f",
-    fontWeight: "600",
+    fontWeight: "bold",
+    color: "#444",
   },
   tabTextSelected: {
-    color: "#fff",
+    color: "white",
   },
   missionCard: {
-    backgroundColor: "#f9f9f9",
-    borderLeftWidth: 5,
-    borderLeftColor: "#cb157c",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 15,
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPink,
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  missionCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 5,
+    shadowRadius: 4,
+    elevation: 3,
+    alignItems: "flex-start", // contrairement à center
   },
   missionTitle: {
-    fontWeight: "bold",
     fontSize: 16,
-    color: "#050212",
+    color: COLORS.primaryBlue,
+    marginBottom: 6,
+    fontFamily: "MuseoModernoBold",
   },
-  missionStatus: {
-    fontWeight: "600",
-    color: "#869962",
+  missionPrice: {
+    fontSize: 13,
+    color: "#555",
+    marginBottom: 3,
+    fontFamily: "Nunito",
+  },
+  missionCity: {
+    fontSize: 13,
+    color: "#555",
+    fontFamily: "Nunito",
+  },
+  sectionTitle: {
+    fontSize: 14,
+    color: COLORS.primaryPink,
+    fontFamily: "NunitoBold",
+    marginTop: 10,
+    marginBottom: 5,
   },
   missionText: {
-    color: "#050212",
-    marginVertical: 2,
+    fontSize: 13,
+    color: "#444",
+    fontFamily: "Nunito",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 15,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   msgButton: {
-    marginTop: 10,
-    backgroundColor: "#ffb01b",
-    padding: 10,
+    backgroundColor: COLORS.primaryPink,
+    paddingVertical: 10,
     borderRadius: 8,
+    justifyContent: "center",
     alignItems: "center",
   },
   msgButtonText: {
-    color: "#050212",
-    fontWeight: "600",
+    color: "white",
+    fontWeight: "bold",
   },
 });

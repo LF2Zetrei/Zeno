@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, ActivityIndicator } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { getOrderById } from "../../utils/getOrderById";
 import { getTrackingPositionsByMissions } from "../../utils/getTrackingPositions";
+import { getProductsByOrder } from "../../utils/getProductsByOrder";
 import { COLORS } from "../../styles/color";
 
 export default function CarteMissionsMap({
@@ -23,9 +24,18 @@ export default function CarteMissionsMap({
 
       const fetchFunctions = missions.map(async (mission) => {
         try {
-          const data = trackingMode
-            ? (await getTrackingPositionsByMissions([mission]))[0]?.positions
-            : await getOrderById(mission.orderId);
+          let data;
+          if (trackingMode) {
+            data = (await getTrackingPositionsByMissions([mission]))[0]
+              ?.positions;
+          } else {
+            data = await getOrderById(mission.orderId);
+            // récupérer les produits liés à la commande
+            const products = await getProductsByOrder(mission.orderId);
+            if (data) {
+              data.products = products || [];
+            }
+          }
           if (data) {
             newMap.set(mission.idMission, data);
           }
@@ -104,33 +114,79 @@ export default function CarteMissionsMap({
         transparent
       >
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+          <View style={styles.missionCard}>
             {selectedMission && selectedMission.data && (
               <>
-                <Text style={styles.modalTitle}>
+                {/* TITRE */}
+                <Text style={styles.missionTitle}>
                   Mission ID : {selectedMission.mission.idMission}
                 </Text>
 
                 {!trackingMode ? (
                   <>
-                    <Text>Artisan : {selectedMission.data.artisanName}</Text>
-                    <Text>
+                    {/* SECTION COMMANDE */}
+                    <Text style={styles.sectionTitle}>Commande</Text>
+                    <Text style={styles.missionText}>
+                      Artisan : {selectedMission.data.artisanName}
+                    </Text>
+                    <Text style={styles.missionText}>
                       Adresse : {selectedMission.data.purchaseAddress}
                     </Text>
-                    <Text>Ville : {selectedMission.data.city}</Text>
-                    <Text>Deadline : {selectedMission.data.deadline}</Text>
-                    <Text>
+                    <Text style={styles.missionText}>
+                      Ville : {selectedMission.data.city}
+                    </Text>
+                    <Text style={styles.missionText}>
+                      Deadline :{" "}
+                      {new Date(
+                        selectedMission.data.deadline
+                      ).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.missionText}>
                       Prix estimé : {selectedMission.data.priceEstimation} €
                     </Text>
+
+                    {/* SECTION PRODUITS */}
+                    <Text style={styles.sectionTitle}>Produits</Text>
+                    {selectedMission.data.products.length === 0 ? (
+                      <Text style={styles.missionText}>
+                        Aucun produit associé.
+                      </Text>
+                    ) : (
+                      selectedMission.data.products.map((product, index) => (
+                        <View
+                          key={index}
+                          style={{ marginLeft: 10, marginBottom: 10 }}
+                        >
+                          <Text style={styles.missionText}>
+                            Nom : {product.name}
+                          </Text>
+                          <Text style={styles.missionText}>
+                            Prix estimé : {product.estimatedPrice} €
+                          </Text>
+                          <Text style={styles.missionText}>
+                            Poids : {product.weight} kg
+                          </Text>
+                          <Text style={styles.missionText}>
+                            Quantité : {product.quantity}
+                          </Text>
+                        </View>
+                      ))
+                    )}
                   </>
                 ) : (
                   <>
-                    <Text>Position actuelle :</Text>
-                    <Text>Latitude : {selectedMission.data.latitude}</Text>
-                    <Text>Longitude : {selectedMission.data.longitude}</Text>
+                    {/* POSITION TRACKÉE */}
+                    <Text style={styles.sectionTitle}>Position actuelle</Text>
+                    <Text style={styles.missionText}>
+                      Latitude : {selectedMission.data.latitude}
+                    </Text>
+                    <Text style={styles.missionText}>
+                      Longitude : {selectedMission.data.longitude}
+                    </Text>
                   </>
                 )}
 
+                {/* FERMER */}
                 <Text
                   style={styles.closeText}
                   onPress={() => setSelectedMission(null)}
@@ -165,29 +221,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)", // overlay noir transparent
   },
-  modalContent: {
-    backgroundColor: "#f4f4f8", // card
-    padding: 24,
-    borderRadius: 16,
+  missionCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    padding: 20,
     width: "85%",
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryPink,
     shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 5,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.primaryBlue, // primaryBlue
-    marginBottom: 12,
+  missionTitle: {
+    fontSize: 16,
+    color: COLORS.primaryBlue,
+    marginBottom: 6,
+    fontFamily: "MuseoModernoBold",
     textAlign: "center",
   },
+  sectionTitle: {
+    fontSize: 14,
+    color: COLORS.primaryPink,
+    fontFamily: "NunitoBold",
+    marginTop: 12,
+    marginBottom: 5,
+  },
+  missionText: {
+    fontSize: 13,
+    color: "#444",
+    fontFamily: "Nunito",
+  },
   closeText: {
-    marginTop: 24,
+    marginTop: 20,
     color: COLORS.primaryYellow,
     textAlign: "center",
-    fontWeight: "600",
-    fontSize: 16,
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
