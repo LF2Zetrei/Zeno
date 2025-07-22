@@ -9,10 +9,14 @@ import {
   Platform,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons"; // Pour l'icône de l'avion en papier
+import { MaterialIcons } from "@expo/vector-icons";
 import { useMessagesWithContact } from "../../hooks/message/useMessagesWithContact";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../context/AuthContext";
+import Constants from "expo-constants";
+import { useState } from "react";
 
 type Props = {
   route: {
@@ -25,7 +29,37 @@ type Props = {
 
 export default function MessagerieScreen({ route }: Props) {
   const { contactId, contactName } = route.params || {};
-  const { messages, loading } = useMessagesWithContact(contactId);
+  const { messages, loading, refetch } = useMessagesWithContact(contactId);
+  const { token } = useAuth();
+  const API_URL = Constants.expoConfig?.extra?.apiUrl;
+  const [content, setContent] = useState("");
+
+  const handleSend = async () => {
+    if (!content.trim()) return;
+
+    try {
+      const res = await fetch(`${API_URL}message/${contactId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: `content=${encodeURIComponent(content)}`,
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        Alert.alert("Erreur", error || "Échec de l'envoi du message.");
+        return;
+      }
+
+      setContent(""); // Clear input
+      refetch(); // 🔄 Recharger les messages
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Erreur", "Erreur réseau.");
+    }
+  };
 
   if (!contactId) return <Text>Contact non sélectionné</Text>;
 
@@ -62,14 +96,15 @@ export default function MessagerieScreen({ route }: Props) {
           />
         )}
 
-        {/* Ajout d'un paddingBottom ici pour laisser de l'espace */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.messageInput}
             placeholder="Écrivez un message"
             multiline
+            value={content}
+            onChangeText={setContent}
           />
-          <TouchableOpacity style={styles.sendButton}>
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
             <MaterialIcons name="send" size={30} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -79,13 +114,10 @@ export default function MessagerieScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
     padding: 16,
-    backgroundColor: "#2f167f", // primaryBlue
+    backgroundColor: "#2f167f",
     alignItems: "center",
   },
   headerTitle: {
@@ -93,12 +125,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  wrapper: {
-    flex: 1,
-  },
+  wrapper: { flex: 1 },
   messageList: {
     padding: 10,
-    paddingBottom: 120, // Augmenter ce paddingBottom pour laisser de l'espace en bas
+    paddingBottom: 120,
   },
   messageContainer: {
     padding: 10,
@@ -107,11 +137,11 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
   },
   userMessage: {
-    backgroundColor: "#DCF8C6", // Couleur verte pour les messages utilisateurs
+    backgroundColor: "#DCF8C6",
     alignSelf: "flex-end",
   },
   contactMessage: {
-    backgroundColor: "#F1F0F0", // Couleur grise pour les messages contact
+    backgroundColor: "#F1F0F0",
     alignSelf: "flex-start",
   },
   messageText: {
@@ -122,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#f4f4f8", // card
+    backgroundColor: "#f4f4f8",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
   },
@@ -136,7 +166,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   sendButton: {
-    backgroundColor: "#2f167f", // primaryBlue
+    backgroundColor: "#2f167f",
     borderRadius: 50,
     padding: 10,
     marginLeft: 10,
