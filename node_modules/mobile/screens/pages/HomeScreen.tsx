@@ -12,7 +12,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import LogoutButton from "../../components/button/LogoutButton";
 import { useUserByJwt } from "../../hooks/user/getUserByJwt";
-import { useMissions } from "../../hooks/mission/useMissions";
+import { useMyMissions } from "../../hooks/mission/useMyMissions";
 import { useTrackingAutomatique } from "../../hooks/position/useRefreshPositionAuto";
 import { useTrackingUserAutomatique } from "../../hooks/position/useRefreshUserPositionAuto.";
 
@@ -33,12 +33,9 @@ const COLORS = {
 
 export default function HomeScreen({ navigation }: Props) {
   const { user, loading: loadingUser } = useUserByJwt();
-  const { missions, loading: loadingMissions } = useMissions();
-
-  const missionsFiltrees = missions.filter(
-    (mission) => mission.traveler?.idUser === user?.idUser
-  );
-  const missionIds = missionsFiltrees.map((mission) => mission.idMission);
+  const { missions, loading: loadingMissions } = useMyMissions();
+  console.log("User : ", user);
+  const missionIds = missions.map((mission) => mission.idMission);
 
   useTrackingAutomatique(missionIds);
   useTrackingUserAutomatique();
@@ -82,7 +79,7 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* Menu */}
       <View style={styles.menu}>
-        {user.role === "DELIVER" && (
+        {user.role !== "USER" && (
           <MenuCard
             label="Missions"
             desc="Voir les missions"
