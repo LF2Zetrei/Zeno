@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -26,6 +27,8 @@ public class UserController {
         this.userRepository = userRepository;
         this.stripeService = stripeService;
     }
+
+
 
     @GetMapping("/me")
     public ResponseEntity<User> getMyProfile(@RequestHeader("Authorization") String authHeader) {
@@ -44,12 +47,33 @@ public class UserController {
     @PutMapping("role")
     public ResponseEntity<?> updateRole(@RequestHeader("Authorization") String authHeader, @RequestParam String role) {
         User user = userService.getUserByJwt(authHeader);
+        userService.updateUserRole(user, role);
 
-            userService.updateUserRole(user, role);
+        if ("DELIVER".equals(role)) {
+            try {
+                // Crée un compte si besoin
+                if (user.getStripeAccountId() == null) {
+                    String accountId = stripeService.createStripeAccount(user);
+                    user.setStripeAccountId(accountId);
+                    userRepository.save(user);
+                }
 
+                // Génére un lien d’onboarding
+                String onboardingUrl = stripeService.createAccountLink(user.getStripeAccountId());
 
-        return ResponseEntity.ok(user);
+                return ResponseEntity.ok(Map.of(
+                        "message", "Compte Stripe à configurer",
+                        "onboardingUrl", onboardingUrl
+                ));
+            } catch (StripeException e) {
+                return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Rôle mis à jour"));
     }
+
+
 
     @PutMapping("/position")
     public ResponseEntity<?> updatePosition(@RequestHeader("Authorization") String authHeader, @RequestParam Double latitude, @RequestParam Double longitude) {

@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
@@ -51,8 +52,8 @@ const StatusSelector = () => {
     fetchRole();
   }, []);
 
-  const handleRoleChange = (newRole: "USER" | "DELIVER") => {
-    if (newRole === currentRole) return; // Pas besoin de changer
+  const handleRoleChange = async (newRole: "USER" | "DELIVER") => {
+    if (newRole === currentRole) return;
 
     Alert.alert(
       "Confirmation",
@@ -62,13 +63,38 @@ const StatusSelector = () => {
         {
           text: "Confirmer",
           onPress: async () => {
-            await updateUserRole(newRole);
-            if (error) {
-              Alert.alert("Erreur", error);
-            } else {
-              setCurrentRole(newRole);
-              setSelectedRole(newRole);
-              Alert.alert("Succès", "Changement de rôle effectué !");
+            const token = await AsyncStorage.getItem("token");
+
+            try {
+              const res = await fetch(`${API_URL}user/role?role=${newRole}`, {
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              const data = await res.json();
+
+              if (res.ok) {
+                setCurrentRole(newRole);
+                setSelectedRole(newRole);
+                Alert.alert(
+                  "Succès",
+                  data.message || "Changement de rôle effectué"
+                );
+
+                // Si on a un lien d'onboarding Stripe
+                if (data.onboardingUrl) {
+                  Linking.openURL(data.onboardingUrl);
+                }
+              } else {
+                Alert.alert(
+                  "Erreur",
+                  data.error || "Impossible de changer le rôle"
+                );
+              }
+            } catch (err: any) {
+              Alert.alert("Erreur", err.message || "Une erreur est survenue");
             }
           },
         },

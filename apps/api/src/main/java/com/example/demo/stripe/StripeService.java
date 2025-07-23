@@ -11,10 +11,12 @@ import com.example.demo.user.UserRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Account;
+import com.stripe.model.AccountLink;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Transfer;
 import com.stripe.model.identity.VerificationSession;
 import com.stripe.param.AccountCreateParams;
+import com.stripe.param.AccountLinkCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.TransferCreateParams;
 import com.stripe.param.identity.VerificationSessionCreateParams;
@@ -48,22 +50,6 @@ public class StripeService {
 
     public record StripePaymentIntent(String clientSecret, String intentId) {}
 
-    public String createConnectedAccountForUser(User user) throws StripeException {
-        Stripe.apiKey = stripeSecretKey;
-
-        AccountCreateParams params = AccountCreateParams.builder()
-                .setType(AccountCreateParams.Type.EXPRESS)
-                .setEmail(user.getEmail())
-                .build();
-
-        Account account = Account.create(params);
-
-        // Sauvegarde l'ID dans l'utilisateur
-        user.setStripeAccountId(account.getId());
-        userRepository.save(user);
-
-        return account.getId();
-    }
 
     public PaymentIntentResponse createPaymentIntent(double amount) {
         Stripe.apiKey = stripeSecretKey;
@@ -157,9 +143,6 @@ public class StripeService {
                 .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
 
         User deliverer = mission.getTraveler();
-        if (deliverer.getStripeAccountId() == null) {
-            createConnectedAccountForUser(deliverer);
-        }
 
         Payment payment = paymentRepository.findByMission(mission)
                 .orElseThrow(() -> new RuntimeException("Paiement non trouvé"));
@@ -210,4 +193,33 @@ public class StripeService {
 
         return intentResponse; // retourne à la fois ID et clientSecret
     }
+
+    public String createStripeAccount(User user) throws StripeException {
+        Stripe.apiKey = stripeSecretKey;
+
+        AccountCreateParams params = AccountCreateParams.builder()
+                .setType(AccountCreateParams.Type.EXPRESS)
+                .setEmail(user.getEmail())
+                .build();
+
+        Account account = Account.create(params);
+
+        return account.getId();
+    }
+
+    public String createAccountLink(String accountId) throws StripeException {
+        Stripe.apiKey = stripeSecretKey;
+
+        AccountLinkCreateParams params = AccountLinkCreateParams.builder()
+                .setAccount(accountId)
+                .setRefreshUrl("https://ton-site.com/stripe/refresh")
+                .setReturnUrl("https://ton-site.com/stripe/success")
+                .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
+                .build();
+
+        AccountLink accountLink = AccountLink.create(params);
+        return accountLink.getUrl();
+    }
+
+
 }

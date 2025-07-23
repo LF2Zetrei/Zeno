@@ -9,10 +9,9 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
-import { useActualiserPositionTracking } from "../../hooks/position/useRTefreshPosition";
 import { COLORS } from "../../styles/color";
 
-const AcceptMissionButton = ({
+const ReceivedMissionButton = ({
   missionId,
   onSuccess,
 }: {
@@ -21,16 +20,15 @@ const AcceptMissionButton = ({
 }) => {
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
-  const { actualiserPosition } = useActualiserPositionTracking();
 
-  const handleAcceptMission = () => {
+  const handleReceived = () => {
     Alert.alert(
-      "Confirmer l'acceptation de la mission",
-      "⚠️ Une fois cette mission acceptée, vous serez responsable de sa livraison. Veuillez vous assurer d'avoir discuté avec l'acheteur avant de confirmer.\n\nSouhaitez-vous devenir le livreur ?",
+      "Confirmer la réception de la commande",
+      "⚠️ Une fois confirmée, cette action est irréversible.\n\nAs-tu bien reçu la commande ?",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Accepter la mission",
+          text: "Oui, j'ai reçu",
           style: "destructive",
           onPress: async () => {
             setLoading(true);
@@ -39,29 +37,32 @@ const AcceptMissionButton = ({
               const url = `${API_URL.replace(
                 /\/$/,
                 ""
-              )}/mission/${missionId}/assign`;
+              )}/mission/${missionId}/received`;
 
               const response = await fetch(url, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                method: "PUT",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
               });
 
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                  errorData.message || "Échec de l’assignation de la mission"
+                  errorData.message || "Échec de la confirmation"
                 );
               }
 
-              await actualiserPosition(missionId);
-
               Alert.alert(
-                "🎉 Mission acceptée",
-                "Vous êtes maintenant assigné à cette mission."
+                "📦 Réception confirmée",
+                "Merci pour ta confirmation !"
               );
               if (onSuccess) onSuccess();
             } catch (error: any) {
-              Alert.alert("Erreur", error.message);
+              Alert.alert(
+                "❌ Erreur",
+                error.message || "Une erreur est survenue."
+              );
             } finally {
               setLoading(false);
             }
@@ -73,25 +74,33 @@ const AcceptMissionButton = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.warning}>Tu seras responsable de cette mission.</Text>
+      <Text style={styles.warning}>
+        Tu ne pourras plus modifier cette action après confirmation.
+      </Text>
       <TouchableOpacity
-        style={[styles.button, loading && styles.disabledButton]}
-        onPress={handleAcceptMission}
+        style={styles.receivedButton}
+        onPress={handleReceived}
         disabled={loading}
+        activeOpacity={0.8}
       >
-        <Text style={styles.buttonText}>
-          {loading ? "Chargement..." : "Accepter la mission"}
-        </Text>
+        {loading ? (
+          <>
+            <Text style={styles.buttonText}>Chargement...</Text>
+            <ActivityIndicator color="#fff" style={{ marginLeft: 8 }} />
+          </>
+        ) : (
+          <Text style={styles.buttonText}>Confirmer la réception</Text>
+        )}
       </TouchableOpacity>
-      {loading && <ActivityIndicator color={COLORS.primaryPink} />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 8,
-    marginBottom: 10,
+    marginVertical: 10,
+    alignItems: "center",
+    width: "100%",
   },
   warning: {
     fontSize: 14,
@@ -99,20 +108,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
-  button: {
-    backgroundColor: COLORS.primaryPink,
-    paddingVertical: 12,
+  receivedButton: {
+    backgroundColor: COLORS.primaryPink || "pink", // Fallback si non défini
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
-  },
-  disabledButton: {
-    opacity: 0.6,
+    justifyContent: "center",
+    width: "100%",
   },
   buttonText: {
-    color: COLORS.background,
-    fontWeight: "600",
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });
 
-export default AcceptMissionButton;
+export default ReceivedMissionButton;

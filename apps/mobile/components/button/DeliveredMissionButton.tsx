@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Button,
   Alert,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import Constants from "expo-constants";
 import { useAuth } from "../../context/AuthContext";
+import { COLORS } from "../../styles/color";
 
 const DeliveredMissionButton = ({
   missionId,
@@ -23,11 +24,11 @@ const DeliveredMissionButton = ({
   const handleDelivered = () => {
     Alert.alert(
       "Confirmer la livraison de la commande",
-      "Avez-vous vraiment livré la commande ?",
+      "📦 As-tu bien livré la commande ? Cette action est irréversible.",
       [
         { text: "Annuler", style: "cancel" },
         {
-          text: "Confirmer",
+          text: "Confirmer la livraison",
           style: "destructive",
           onPress: async () => {
             setLoading(true);
@@ -46,14 +47,20 @@ const DeliveredMissionButton = ({
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(
-                  errorData.message || "Échec de la comfirmation"
+                  errorData.message || "Échec de la confirmation"
                 );
               }
 
-              Alert.alert("La commande à bien été livrée.");
+              Alert.alert(
+                "✅ Livraison confirmée",
+                "La commande a bien été livrée."
+              );
               if (onSuccess) onSuccess();
             } catch (error: any) {
-              Alert.alert("Erreur", error.message);
+              Alert.alert(
+                "❌ Erreur",
+                error.message || "Une erreur est survenue."
+              );
             } finally {
               setLoading(false);
             }
@@ -66,29 +73,53 @@ const DeliveredMissionButton = ({
   return (
     <View style={styles.container}>
       <Text style={styles.warning}>
-        Tu ne pourras plus changer la comfirmation de la livraison.
+        Tu ne pourras plus modifier cette livraison après confirmation.
       </Text>
-      <Button
-        title="Comfrimer la livraison"
+      <TouchableOpacity
+        style={styles.deliveredButton}
         onPress={handleDelivered}
-        color="#d11a2a"
         disabled={loading}
-      />
-      {loading && <ActivityIndicator color="#d11a2a" />}
+        activeOpacity={0.8}
+      >
+        {loading ? (
+          <>
+            <Text style={styles.buttonText}>Chargement...</Text>
+            <ActivityIndicator color="#fff" style={{ marginLeft: 8 }} />
+          </>
+        ) : (
+          <Text style={styles.buttonText}>Confirmer la livraison</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
-    gap: 16,
+    marginVertical: 10,
     alignItems: "center",
+    width: "100%",
   },
   warning: {
     fontSize: 14,
     color: "#000",
     textAlign: "center",
+    marginBottom: 10,
+  },
+  deliveredButton: {
+    backgroundColor: COLORS.primaryPink || "pink", // Fallback si non défini
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 
