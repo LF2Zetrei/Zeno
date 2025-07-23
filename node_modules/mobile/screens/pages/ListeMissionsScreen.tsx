@@ -206,31 +206,33 @@ export default function MissionsScreen() {
                   />
                 )}
 
-              {!item.travelerId && selectedTab === "all" && (
-                <View style={{ marginTop: 10 }}>
-                  <AcceptMissionButton
-                    missionId={item.idMission}
-                    onSuccess={() => handleAcceptMission(item.idMission)}
-                  />
-                  <TouchableOpacity
-                    style={styles.msgButton}
-                    onPress={() => {
-                      if (order?.buyer?.idUser) {
-                        navigation.navigate("Messagerie", {
-                          contactId: order.buyer.idUser,
-                          contactName: order.buyer.pseudo,
-                        });
-                      } else {
-                        alert("Impossible de récupérer l'acheteur.");
-                      }
-                    }}
-                  >
-                    <Text style={styles.msgButtonText}>
-                      Aller à la messagerie
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+              {!item.travelerId &&
+                selectedTab === "all" &&
+                item.travelerPseudo !== null && (
+                  <View style={{ marginTop: 10 }}>
+                    <AcceptMissionButton
+                      missionId={item.idMission}
+                      onSuccess={() => handleAcceptMission(item.idMission)}
+                    />
+                    <TouchableOpacity
+                      style={styles.msgButton}
+                      onPress={() => {
+                        if (order?.buyer?.idUser) {
+                          navigation.navigate("Messagerie", {
+                            contactId: order.buyer.idUser,
+                            contactName: order.buyer.pseudo,
+                          });
+                        } else {
+                          alert("Impossible de récupérer l'acheteur.");
+                        }
+                      }}
+                    >
+                      <Text style={styles.msgButtonText}>
+                        Aller à la messagerie
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
             </View>
           </>
         )}

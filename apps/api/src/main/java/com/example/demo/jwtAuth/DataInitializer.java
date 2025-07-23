@@ -1,5 +1,7 @@
 package com.example.demo.jwtAuth;
 
+import com.example.demo.product.Product;
+import com.example.demo.product.ProductRepository;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -11,10 +13,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DataInitializer {
 
     @Bean
-    public CommandLineRunner initUsers(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public CommandLineRunner initUsers(UserRepository userRepository, PasswordEncoder passwordEncoder, ProductRepository productRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 User user = new User();
+                user.setPseudo("admin");
                 user.setEmail("admin@example.com");
                 user.setPassword(passwordEncoder.encode("admin123")); // Toujours stocker un mot de passe hashé !
                 user.setRole("ADMIN");

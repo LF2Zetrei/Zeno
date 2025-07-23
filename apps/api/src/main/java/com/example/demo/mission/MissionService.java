@@ -148,9 +148,14 @@ public class MissionService {
     }
 
     public MissionResponse assignDeliverer(UUID missionId, User user) {
-        System.out.println("[assignDeliverer] Affectation du livreur " + user.getIdUser() + " à la mission : " + missionId);
+        System.out.println("[assignDeliverer] Tentative d'affectation du livreur " + user.getIdUser() + " à la mission : " + missionId);
+
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
+
+        if (mission.getTraveler() != null) {
+            throw new IllegalStateException("Un livreur est déjà assigné à cette mission.");
+        }
 
         mission.setTraveler(user);
         mission.setStatus(MissionStatus.ACCEPTED);
@@ -160,6 +165,7 @@ public class MissionService {
         Mission updated = missionRepository.save(mission);
         return MissionMapper.toDto(updated);
     }
+
 
     public MissionResponse unAssignDeliver(UUID missionId, User user) {
         System.out.println("[unAssignDeliverer] Désaffection du livreur " + user.getIdUser() + " à la mission : " + missionId);

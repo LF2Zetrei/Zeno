@@ -82,11 +82,14 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* Menu */}
       <View style={styles.menu}>
-        <MenuCard
-          label="Missions"
-          desc="Voir les missions"
-          onPress={() => navigation.navigate("Missions")}
-        />
+        {user.role === "DELIVER" && (
+          <MenuCard
+            label="Missions"
+            desc="Voir les missions"
+            onPress={() => navigation.navigate("Missions")}
+          />
+        )}
+
         <MenuCard
           label="Commandes"
           desc="Voir vos commandes"
