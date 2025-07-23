@@ -41,7 +41,7 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
 
       if (!res.ok) throw new Error("Échec de l'initialisation du paiement.");
 
-      const { clientSecret } = await res.json();
+      const { clientSecret, paymentIntentId } = await res.json();
 
       const merchantDisplayName =
         Constants.expoConfig?.extra?.merchantDisplayName || "Zeno";
@@ -61,7 +61,9 @@ const PublishOrderButton = ({ orderId, onSuccess }: Props) => {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ paymentIntentId }),
       });
 
       if (!response.ok)

@@ -7,8 +7,11 @@ import com.example.demo.mission.MissionService;
 import com.example.demo.product.Product;
 import com.example.demo.product.ProductMapper;
 import com.example.demo.product.ProductResponse;
+import com.example.demo.stripe.StripeService;
 import com.example.demo.user.User;
 import com.example.demo.user.UserService;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLOutput;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -26,12 +30,14 @@ public class OrderController {
     private final UserService userService;
     private final OrderRepository orderRepository;
     private final MissionService missionService;
+    private final StripeService stripeService;
 
-    public OrderController(OrderService orderService, UserService userService, OrderRepository orderRepository, MissionService missionService) {
+    public OrderController(OrderService orderService, UserService userService, OrderRepository orderRepository, MissionService missionService, StripeService stripeService) {
         this.orderService = orderService;
         this.userService = userService;
         this.orderRepository = orderRepository;
         this.missionService = missionService;
+        this.stripeService = stripeService;
     }
 
     @PostMapping("/create")
@@ -126,11 +132,37 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/public")
-    public ResponseEntity<Void> validateOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
+    public ResponseEntity<?> validateOrder(
+            @PathVariable UUID orderId,
+            @RequestBody Map<String, String> body,
+            @RequestHeader("Authorization") String authHeader
+    ) throws StripeException {
         String jwt = extractToken(authHeader);
+        String paymentIntentId = body.get("paymentIntentId");
+        if (paymentIntentId == null) {
+            return ResponseEntity.badRequest().body("paymentIntentId manquant");
+        }
+
+        User user = userService.getUserByJwt(authHeader);
+
+        // 🔒 1. Vérifie que le paiement est bien effectué
+        PaymentIntent intent = PaymentIntent.retrieve(paymentIntentId);
+        if (!"succeeded".equals(intent.getStatus())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Paiement non validé");
+        }
+
+        // 🔒 2. Vérifie que ce paiement appartient bien à l’utilisateur
+        if (!stripeService.isPaymentIntentLinkedToUser(paymentIntentId, user.getIdUser())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Ce paiement ne vous appartient pas");
+        }
+
+        // ✅ 3. Publie la commande
         orderService.validateOrder(orderId);
         return ResponseEntity.ok().build();
     }
+
 
     @GetMapping("{orderId}/products")
     public ResponseEntity<List<ProductResponse>> getProductsInOrder(@PathVariable UUID orderId, @RequestHeader("Authorization") String authHeader){
