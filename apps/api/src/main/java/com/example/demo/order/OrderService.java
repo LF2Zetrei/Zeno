@@ -285,8 +285,11 @@ public class OrderService {
     public void validateOrder(UUID orderId) {
         Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
         Mission mission = missionRepository.findByOrder(order).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment introuvable"));
         mission.setIsPublic(true);
         missionRepository.save(mission);
+        payment.setStatus("SUCCEEDED");
+        paymentRepository.save(payment);
 
     }
     public Mission getMissionByOrderId(UUID orderId) {
