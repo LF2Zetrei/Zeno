@@ -220,57 +220,50 @@ public class MissionService {
         return result;
     }
 
-    public void received(UUID missionId, User user) throws StripeException {
-        System.out.println("[received] Mission : " + missionId);
-        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
-        if (!Boolean.TRUE.equals(mission.getMissionReceived())) {
-            if ( mission.getOrder().getBuyer().getIdUser() == user.getIdUser() ) {
-                mission.setMissionReceived(true);
-                missionRepository.save(mission);
-                System.out.println("[received] Mission reçue. ");
-
-            } else {
-                System.out.println("[delivered] L'utilisateur n'a pas les droits");
-            }
-        } else {
-            if (mission.getOrder().getBuyer().getIdUser() == user.getIdUser()) {
-                mission.setMissionReceived(true);
-                missionRepository.save(mission);
-                System.out.println("[received] Mission reçue. ");
-                stripeService.transferToDeliverer(missionId);
-
-            } else {
-                System.out.println("[delivered] L'utilisateur n'a pas les droits");
-            }
-
-        }
-
-    }
-
     public void delivered(UUID missionId, User user) throws StripeException {
-        System.out.println("[delivered] Mission : " + missionId);
-        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Mission mission = missionRepository.findByIdMission(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission introuvable"));
+
         if (!Boolean.TRUE.equals(mission.getMissionDelivered())) {
-            if (mission.getTraveler().getIdUser() == user.getIdUser()) {
+            if (mission.getTraveler().getIdUser().equals(user.getIdUser())) {
                 mission.setMissionDelivered(true);
                 missionRepository.save(mission);
                 System.out.println("[delivered] Mission délivrée.");
 
+                // Vérifie si les deux validations sont faites pour lancer le virement
+                if (Boolean.TRUE.equals(mission.getMissionReceived())) {
+                    stripeService.transferToDeliverer(missionId);
+                }
             } else {
                 System.out.println("[delivered] L'utilisateur n'a pas les droits.");
             }
         } else {
-            if (mission.getTraveler().getIdUser() == user.getIdUser()) {
-                mission.setMissionDelivered(true);
-                missionRepository.save(mission);
-                System.out.println("[delivered] Mission délivrée.");
-                stripeService.transferToDeliverer(missionId);
-            } else {
-                System.out.println("[delivered] L'utilisateur n'a pas les droits.");
-            }
+            System.out.println("[delivered] Mission déjà délivrée.");
         }
-
     }
+
+    public void received(UUID missionId, User user) throws StripeException {
+        Mission mission = missionRepository.findByIdMission(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission introuvable"));
+
+        if (!Boolean.TRUE.equals(mission.getMissionReceived())) {
+            if (mission.getOrder().getBuyer().getIdUser().equals(user.getIdUser())) {
+                mission.setMissionReceived(true);
+                missionRepository.save(mission);
+                System.out.println("[received] Mission reçue.");
+
+                // Vérifie si les deux validations sont faites pour lancer le virement
+                if (Boolean.TRUE.equals(mission.getMissionDelivered())) {
+                    stripeService.transferToDeliverer(missionId);
+                }
+            } else {
+                System.out.println("[received] L'utilisateur n'a pas les droits.");
+            }
+        } else {
+            System.out.println("[received] Mission déjà reçue.");
+        }
+    }
+
 
 
 }
