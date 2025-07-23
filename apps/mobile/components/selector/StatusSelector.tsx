@@ -85,6 +85,7 @@ const StatusSelector = () => {
 
                 // Si on a un lien d'onboarding Stripe
                 if (data.onboardingUrl) {
+                  console.log("Lien Stripe : ", data.onboardingUrl);
                   Linking.openURL(data.onboardingUrl);
                 }
               } else {
