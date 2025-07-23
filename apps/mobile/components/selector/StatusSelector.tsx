@@ -64,6 +64,10 @@ const StatusSelector = () => {
           text: "Confirmer",
           onPress: async () => {
             const token = await AsyncStorage.getItem("token");
+            if (!token) {
+              Alert.alert("Erreur", "Token manquant");
+              return;
+            }
 
             try {
               const res = await fetch(`${API_URL}user/role?role=${newRole}`, {
@@ -73,7 +77,17 @@ const StatusSelector = () => {
                 },
               });
 
-              const data = await res.json();
+              const text = await res.text();
+              console.log("Réponse brute :", text);
+
+              let data: any = {};
+              try {
+                data = JSON.parse(text);
+              } catch (err) {
+                console.error("Erreur JSON :", err);
+                Alert.alert("Erreur", "La réponse du serveur est invalide");
+                return;
+              }
 
               if (res.ok) {
                 setCurrentRole(newRole);
@@ -83,7 +97,6 @@ const StatusSelector = () => {
                   data.message || "Changement de rôle effectué"
                 );
 
-                // Si on a un lien d'onboarding Stripe
                 if (data.onboardingUrl) {
                   console.log("Lien Stripe : ", data.onboardingUrl);
                   Linking.openURL(data.onboardingUrl);

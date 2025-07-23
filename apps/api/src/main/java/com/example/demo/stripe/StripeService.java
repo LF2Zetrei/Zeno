@@ -212,8 +212,7 @@ public class StripeService {
 
         AccountLinkCreateParams params = AccountLinkCreateParams.builder()
                 .setAccount(accountId)
-                .setRefreshUrl("https://ton-site.com/stripe/refresh")
-                .setReturnUrl("https://ton-site.com/stripe/success")
+                .setReturnUrl("http://localhost:3000/verify-complete")
                 .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                 .build();
 
