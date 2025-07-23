@@ -102,16 +102,24 @@ export default function ListeOrderScreen() {
     setEditingOrderId(null);
   };
 
-  if (loadingOrders || loadingMissions || loadingProducts) {
+  if (loadingOrders) {
     return <ActivityIndicator size="large" color={COLORS.primaryBlue} />;
   }
 
-  if (orders.length === 0) {
+  // Si les commandes sont vides après chargement
+  if (!loadingOrders && orders.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text>Aucune commande trouvée.</Text>
+        <Text style={{ fontSize: 16, color: COLORS.primaryBlue }}>
+          Aucune commande trouvée.
+        </Text>
       </View>
     );
+  }
+
+  // Si les commandes sont là, mais missions ou produits en cours de chargement
+  if (loadingMissions || loadingProducts) {
+    return <ActivityIndicator size="large" color={COLORS.primaryBlue} />;
   }
 
   return (

@@ -78,41 +78,42 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
       {/* Menu */}
-      <View style={styles.menu}>
-        {user.role !== "USER" && (
+      {!loadingUser && user && (
+        <View style={styles.menu}>
+          {user.role !== "USER" && (
+            <MenuCard
+              label="Missions"
+              desc="Voir les missions"
+              onPress={() => navigation.navigate("Missions")}
+            />
+          )}
           <MenuCard
-            label="Missions"
-            desc="Voir les missions"
-            onPress={() => navigation.navigate("Missions")}
+            label="Commandes"
+            desc="Voir vos commandes"
+            onPress={() => navigation.navigate("Orders")}
           />
-        )}
-
-        <MenuCard
-          label="Commandes"
-          desc="Voir vos commandes"
-          onPress={() => navigation.navigate("Orders")}
-        />
-        <MenuCard
-          label="Carte"
-          desc="Carte des missions"
-          onPress={() => navigation.navigate("Carte")}
-        />
-        <MenuCard
-          label="Messagerie"
-          desc="Voir vos messages"
-          onPress={() => navigation.navigate("Contact")}
-        />
-        <MenuCard
-          label="Créer mission"
-          desc="Créer une mission"
-          onPress={() => navigation.navigate("CreateMission")}
-        />
-        <MenuCard
-          label="Abonnements"
-          desc="Voir les offres"
-          onPress={() => navigation.navigate("Subscription")}
-        />
-      </View>
+          <MenuCard
+            label="Carte"
+            desc="Carte des missions"
+            onPress={() => navigation.navigate("Carte")}
+          />
+          <MenuCard
+            label="Messagerie"
+            desc="Voir vos messages"
+            onPress={() => navigation.navigate("Contact")}
+          />
+          <MenuCard
+            label="Créer mission"
+            desc="Créer une mission"
+            onPress={() => navigation.navigate("CreateMission")}
+          />
+          <MenuCard
+            label="Abonnements"
+            desc="Voir les offres"
+            onPress={() => navigation.navigate("Subscription")}
+          />
+        </View>
+      )}
 
       {/* Mascotte toucan */}
       <View style={styles.mascotSection}>
