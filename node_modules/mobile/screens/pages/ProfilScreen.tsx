@@ -59,6 +59,7 @@ export default function ProfilScreen() {
         <ProfileLine label="Pays" value={user.country} />
         <ProfileLine label="Adresse" value={user.address} />
         <ProfileLine label="Code postal" value={user.postalCode} />
+        <ProfileLine label="Role" value={user.role} />
         <ProfileLine
           label="Abonnement"
           value={subscription}

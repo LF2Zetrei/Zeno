@@ -208,7 +208,7 @@ export default function MissionsScreen() {
 
               {!item.travelerId &&
                 selectedTab === "all" &&
-                item.travelerPseudo !== null && (
+                item.travelerPseudo === null && (
                   <View style={{ marginTop: 10 }}>
                     <AcceptMissionButton
                       missionId={item.idMission}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,8 @@ import { useMessagesWithContact } from "../../hooks/message/useMessagesWithConta
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
-import { useState } from "react";
+import { useChatSocket } from "../../hooks/message/useChatSocket";
+import { useUserByJwt } from "../../hooks/user/getUserByJwt";
 
 type Props = {
   route: {
@@ -29,10 +30,46 @@ type Props = {
 
 export default function MessagerieScreen({ route }: Props) {
   const { contactId, contactName } = route.params || {};
-  const { messages, loading, refetch } = useMessagesWithContact(contactId);
+  const {
+    messages,
+    loading: messagesLoading,
+    refetch,
+  } = useMessagesWithContact(contactId);
   const { token } = useAuth();
+  const { user, loading: userLoading } = useUserByJwt();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
   const [content, setContent] = useState("");
+
+  const [displayedMessages, setDisplayedMessages] = useState<any[]>([]);
+
+  // Ref pour scroller au dernier message
+  const flatListRef = useRef<FlatList>(null);
+
+  // Sync messages initialement
+  useEffect(() => {
+    if (!messagesLoading && messages) {
+      setDisplayedMessages(messages);
+    }
+  }, [messagesLoading, messages]);
+
+  // Message reçu via WebSocket
+  const handleIncomingMessage = (newMessage: any) => {
+    console.log("📩 Message reçu via WebSocket :", newMessage);
+    setDisplayedMessages((prev) => [...prev, newMessage]);
+  };
+
+  console.log("contactId:", contactId);
+  console.log("token:", token);
+  console.log("user:", user);
+
+  useChatSocket(contactId, user?.idUser, token, handleIncomingMessage);
+
+  // Scroll vers le dernier message quand displayedMessages change
+  useEffect(() => {
+    if (displayedMessages.length && flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [displayedMessages]);
 
   const handleSend = async () => {
     if (!content.trim()) return;
@@ -53,8 +90,8 @@ export default function MessagerieScreen({ route }: Props) {
         return;
       }
 
-      setContent(""); // Clear input
-      refetch(); // 🔄 Recharger les messages
+      setContent("");
+      refetch();
     } catch (err) {
       console.error(err);
       Alert.alert("Erreur", "Erreur réseau.");
@@ -62,6 +99,7 @@ export default function MessagerieScreen({ route }: Props) {
   };
 
   if (!contactId) return <Text>Contact non sélectionné</Text>;
+  if (userLoading) return <ActivityIndicator size="large" color="#2196F3" />;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,12 +112,17 @@ export default function MessagerieScreen({ route }: Props) {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={80}
       >
-        {loading ? (
+        {messagesLoading ? (
           <ActivityIndicator size="large" color="#2196F3" />
         ) : (
           <FlatList
-            data={messages}
-            keyExtractor={(item) => item.id}
+            ref={flatListRef}
+            data={displayedMessages}
+            keyExtractor={(item) =>
+              item.id?.toString() ||
+              item.idMessage?.toString() ||
+              Math.random().toString()
+            }
             renderItem={({ item }) => (
               <View
                 style={[
@@ -93,6 +136,9 @@ export default function MessagerieScreen({ route }: Props) {
               </View>
             )}
             contentContainerStyle={styles.messageList}
+            onContentSizeChange={() =>
+              flatListRef.current?.scrollToEnd({ animated: true })
+            }
           />
         )}
 
