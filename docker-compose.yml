@@ -25,6 +25,7 @@ services:
       STRIPE_SECRET: ${STRIPE_SECRET}
       STRIPE_PUBLIC: ${STRIPE_PUBLIC}
       JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URLS: ${FRONTEND_URLS}
 
     networks:
       - zeno-net
