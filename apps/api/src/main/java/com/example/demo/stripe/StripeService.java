@@ -29,9 +29,21 @@ import java.util.UUID;
 
 @Service
 public class StripeService {
+    @Value("${stripe.minimum.transfer.amount}")
+    private float minimumTransferAmount;
+
+    @Value("${stripe.company.taxe.amount}")
+    private float companyTaxAmount;
+
 
     @Value("${stripe.api.secret}")
     private String stripeSecretKey;
+
+    @Value("${stripe.return.url}")
+    private String stripeReturnUrl;
+
+    @Value("${stripe.refresh.url}")
+    private String stripeRefreshUrl;
 
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
@@ -75,7 +87,7 @@ public class StripeService {
         VerificationSessionCreateParams params = VerificationSessionCreateParams.builder()
                 .setType(VerificationSessionCreateParams.Type.DOCUMENT)
                 .putMetadata("userId", userId.toString())
-                .setReturnUrl("http://localhost:3000/verify-complete")
+                .setReturnUrl(stripeReturnUrl)
                 .build();
 
         VerificationSession session = VerificationSession.create(params);
@@ -151,12 +163,20 @@ public class StripeService {
             throw new RuntimeException("Paiement non encore validé");
         }
 
-        long totalAmountCents = (long) (payment.getAmount() * 100);
+        Float amount = payment.getAmount();
+
+        // Seuil défini dans application.properties
+        if (amount <= minimumTransferAmount) {
+            amount = minimumTransferAmount;
+        }
+
+        long totalAmountCents = (long) (amount * 100);
         long platformFee = (long) (totalAmountCents * 0.10);
         long amountToSend = totalAmountCents - platformFee;
 
         createTransferToUser(deliverer.getStripeAccountId(), amountToSend);
     }
+
 
     public void savePendingPayment(String paymentIntentId, UUID userId, String type) {
         Payment pending = new Payment();
@@ -184,7 +204,7 @@ public class StripeService {
             throw new RuntimeException("Montant du paiement manquant");
         }
 
-        PaymentIntentResponse intentResponse = createPaymentIntent(payment.getAmount());
+        PaymentIntentResponse intentResponse = createPaymentIntent(payment.getAmount() + companyTaxAmount);
 
         payment.setStripeId(intentResponse.getId());
         payment.setStatus("CREATED");
@@ -212,8 +232,8 @@ public class StripeService {
 
         AccountLinkCreateParams params = AccountLinkCreateParams.builder()
                 .setAccount(accountId)
-                .setRefreshUrl("https://ton-site.com/stripe/refresh")
-                .setReturnUrl("http://localhost:3000/verify-complete")
+                .setRefreshUrl(stripeRefreshUrl)
+                .setReturnUrl(stripeReturnUrl)
                 .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                 .build();
 
