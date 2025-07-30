@@ -48,13 +48,21 @@ function AppRoutes() {
           />
         ),
         headerRight: () => <CustomHeaderRight />,
-        headerStyle: {
-          backgroundColor: "#2f167f", // fond bleu nuit
-        },
-        headerTintColor: "#ffffffff", // texte ou flèches jaune soleil
+        headerBackground: () => (
+          <Image
+            source={require("./assets/background/meli_melo.png")} // Ton image de fond
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              resizeMode: "cover",
+              opacity: 1,
+            }}
+          />
+        ),
+        headerTintColor: "#fff",
         headerTitleAlign: "left",
         headerShadowVisible: true,
-        headerFontFamily: "MuseoModernoBold",
       }}
     >
       {token ? (

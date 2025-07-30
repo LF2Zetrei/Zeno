@@ -5,11 +5,9 @@ import { BlurView } from "expo-blur";
 
 export default function ConnexionScreen() {
   return (
-    <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill}>
-      <ScrollView contentContainerStyle={styles.overlay}>
-        <ConnexionForm />
-      </ScrollView>
-    </BlurView>
+    <ScrollView contentContainerStyle={styles.overlay}>
+      <ConnexionForm />
+    </ScrollView>
   );
 }
 
