@@ -26,6 +26,8 @@ services:
       STRIPE_PUBLIC: ${STRIPE_PUBLIC}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URLS: ${FRONTEND_URLS}
+      RETURN_URL: ${RETURN_URL}
+      REFRESH_URL: ${REFRESH_URL}
 
     networks:
       - zeno-net
