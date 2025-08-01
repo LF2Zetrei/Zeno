@@ -25,6 +25,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Filtre de sécurité qui intercepte chaque requête HTTP pour valider le token JWT dans l'en-tête Authorization.
+     * Si le token est valide, il configure le contexte de sécurité avec l'authentification de l'utilisateur.
+     *
+     * @param request      la requête HTTP entrante
+     * @param response     la réponse HTTP
+     * @param filterChain  la chaîne de filtres à exécuter après ce filtre
+     * @throws ServletException en cas d'erreur de servlet
+     * @throws IOException      en cas d'erreur d'entrée/sortie
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -33,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
+        // Extraction du token JWT de l'en-tête Authorization si présent et correctement préfixé par "Bearer "
         if (header != null && header.startsWith("Bearer ")) {
             token = header.substring(7);
             if (jwtUtils.validateJwtToken(token)) {
@@ -40,6 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
+        // Si un utilisateur est extrait du token et qu'aucune authentification n'est encore définie dans le contexte de sécurité,
+        // charger les détails utilisateur et valider à nouveau le token avant de configurer l'authentification
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
@@ -53,6 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
+        // Continuer la chaîne de filtres
         filterChain.doFilter(request, response);
     }
 }

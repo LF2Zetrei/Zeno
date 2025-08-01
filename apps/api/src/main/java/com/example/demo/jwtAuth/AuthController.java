@@ -24,6 +24,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -35,19 +36,39 @@ public class AuthController {
         this.jwtUtils = jwtUtils;
     }
 
+    /**
+     * Authentifie un utilisateur à partir de ses identifiants (pseudo ou email + mot de passe).
+     * En cas de succès, génère un jeton JWT à renvoyer au client.
+     *
+     * @param loginRequest les identifiants de connexion fournis par l'utilisateur
+     * @return une réponse contenant le token JWT
+     */
     @PostMapping("/login")
     public JwtResponse authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = jwtUtils.generateJwtToken(((UserDetailsImpl) authentication.getPrincipal()).getUsername());
+        String jwt = jwtUtils.generateJwtToken(
+                ((UserDetailsImpl) authentication.getPrincipal()).getUsername()
+        );
 
         return new JwtResponse(jwt);
     }
 
+    /**
+     * Enregistre un nouvel utilisateur si l'email et le pseudo ne sont pas déjà utilisés.
+     * Encode le mot de passe avant la sauvegarde.
+     *
+     * @param request les informations de l'utilisateur à enregistrer
+     * @return une réponse contenant l'identifiant de l'utilisateur ou une erreur si les identifiants sont déjà utilisés
+     */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -75,7 +96,8 @@ public class AuthController {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(new RegisterResponse(user.getIdUser(), "Utilisateur enregistré avec succès"));
+        return ResponseEntity.ok(
+                new RegisterResponse(user.getIdUser(), "Utilisateur enregistré avec succès")
+        );
     }
 }
-

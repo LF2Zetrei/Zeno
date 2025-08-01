@@ -23,6 +23,13 @@ public class BadgeService {
         this.badgeRepository = badgeRepository;
     }
 
+    /**
+     * Crée un nouveau badge avec un nom et une description.
+     *
+     * @param name        le nom du badge
+     * @param description la description du badge
+     * @return le badge nouvellement créé et sauvegardé en base de données
+     */
     public Badge createBadge(String name, String description) {
         Badge badge = new Badge();
         badge.setIdBadge(UUID.randomUUID());
@@ -31,6 +38,13 @@ public class BadgeService {
         return badgeRepository.save(badge);
     }
 
+    /**
+     * Attribue un badge à un utilisateur donné.
+     *
+     * @param badgeId l'identifiant du badge à attribuer
+     * @param user    l'utilisateur à qui attribuer le badge
+     * @throws RuntimeException si le badge n'existe pas ou si l'utilisateur a déjà ce badge
+     */
     public void assignBadgeToUser(UUID badgeId, User user) {
         Badge badge = badgeRepository.findByIdBadge(badgeId)
                 .orElseThrow(() -> new RuntimeException("Badge not found"));
@@ -46,8 +60,14 @@ public class BadgeService {
         userBadgeRepository.save(userBadge);
     }
 
+    /**
+     * Supprime l'attribution d'un badge pour un utilisateur donné.
+     *
+     * @param badgeId l'identifiant du badge à désassocier
+     * @param user    l'utilisateur concerné
+     * @throws RuntimeException si l'utilisateur ne possède pas ce badge
+     */
     public void unAssignBadgeToUser(UUID badgeId, User user){
-
         UserBadge userBadge = userBadgeRepository.findByUser(user).stream()
                 .filter(ub -> ub.getBadge().getIdBadge().equals(badgeId))
                 .findFirst()
@@ -56,6 +76,12 @@ public class BadgeService {
         userBadgeRepository.delete(userBadge);
     }
 
+    /**
+     * Supprime un badge du système ainsi que toutes ses associations avec les utilisateurs.
+     *
+     * @param badgeId l'identifiant du badge à supprimer
+     * @throws RuntimeException si le badge n'existe pas
+     */
     public void deleteBadge(UUID badgeId) {
         Badge badge = badgeRepository.findByIdBadge(badgeId)
                 .orElseThrow(() -> new RuntimeException("Badge not found"));
@@ -68,6 +94,12 @@ public class BadgeService {
         badgeRepository.delete(badge);
     }
 
+    /**
+     * Récupère la liste des badges associés à un utilisateur donné.
+     *
+     * @param user l'utilisateur dont on veut récupérer les badges
+     * @return la liste des badges de l'utilisateur
+     */
     public List<Badge> getUserBadges(User user) {
         return userBadgeRepository.findByUser(user).stream()
                 .map(UserBadge::getBadge)

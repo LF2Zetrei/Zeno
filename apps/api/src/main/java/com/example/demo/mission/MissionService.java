@@ -24,6 +24,7 @@ import java.util.UUID;
 @Service
 public class MissionService {
 
+    // Dépendances injectées via constructeur
     private final MissionRepository missionRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -33,11 +34,15 @@ public class MissionService {
     private final PaymentRepository paymentRepository;
     private final StripeService stripeService;
 
+    // Constructeur pour injection des dépendances
     public MissionService(MissionRepository missionRepository,
                           OrderRepository orderRepository,
                           UserRepository userRepository,
                           JwtUtils jwtUtil,
-                          UserService userService, TrackingRepository trackingRepository, PaymentRepository paymentRepository, StripeService stripeService) {
+                          UserService userService,
+                          TrackingRepository trackingRepository,
+                          PaymentRepository paymentRepository,
+                          StripeService stripeService) {
         this.missionRepository = missionRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -48,13 +53,22 @@ public class MissionService {
         this.stripeService = stripeService;
     }
 
+    /**
+     * Crée une mission à partir d'une commande existante.
+     * - Vérifie qu'aucune mission n'est déjà associée à cette commande.
+     * - Initialise la mission, le tracking et le paiement liés.
+     * @param orderId l'UUID de la commande
+     * @return la DTO de la mission créée
+     */
     public MissionResponse createMissionFromOrder(UUID orderId){
-        Order order = orderRepository.findByIdOrder(orderId).orElseThrow(() -> new RuntimeException("Commande introuvable"));
+        Order order = orderRepository.findByIdOrder(orderId)
+                .orElseThrow(() -> new RuntimeException("Commande introuvable"));
 
         if(missionRepository.findByOrder(order).isPresent()){
             throw new RuntimeException("Vous ne pouvez pas créer une mission car la commande en a déjà une associée");
         }
 
+        // Création de la mission avec les valeurs par défaut
         Mission mission = new Mission();
         mission.setOrder(order);
         mission.setCreatedAt(LocalDateTime.now());
@@ -65,6 +79,7 @@ public class MissionService {
         mission.setMissionReceived(false);
         missionRepository.save(mission);
 
+        // Initialisation du tracking lié à la mission
         Tracking tracking = new Tracking();
         tracking.setCreatedAt(LocalDateTime.now());
         tracking.setUpdatedAt(LocalDateTime.now());
@@ -74,6 +89,7 @@ public class MissionService {
         tracking.setLongitude(null);
         trackingRepository.save(tracking);
 
+        // Initialisation du paiement lié à la mission
         Payment payment = new Payment();
         payment.setCreatedAt(LocalDateTime.now());
         payment.setUpdatedAt(LocalDateTime.now());
@@ -86,6 +102,12 @@ public class MissionService {
         return MissionMapper.toDto(mission);
     }
 
+    /**
+     * Met à jour le statut d'une mission donnée.
+     * @param missionId l'UUID de la mission
+     * @param newStatus le nouveau statut à appliquer (ex: "ACCEPTED")
+     * @return la DTO de la mission mise à jour
+     */
     public MissionResponse updateMissionStatus(UUID missionId, String newStatus) {
         System.out.println("[updateMissionStatus] MAJ missionId : " + missionId + " => " + newStatus);
         Mission mission = missionRepository.findById(missionId)
@@ -97,6 +119,11 @@ public class MissionService {
         return MissionMapper.toDto(updated);
     }
 
+    /**
+     * Récupère le statut d'une mission.
+     * @param missionId l'UUID de la mission
+     * @return le statut sous forme de chaîne
+     */
     public String getMissionStatus(UUID missionId) {
         System.out.println("[getMissionStatus] Récupération status pour missionId : " + missionId);
         String status = String.valueOf(missionRepository.findById(missionId)
@@ -106,6 +133,11 @@ public class MissionService {
         return status;
     }
 
+    /**
+     * Supprime une mission et ses entités associées (tracking, paiement),
+     * puis met à jour la commande liée pour indiquer qu'elle est annulée.
+     * @param missionId l'UUID de la mission à supprimer
+     */
     @Transactional
     public void deleteMissionAndUpdateCommande(UUID missionId) {
         Mission mission = missionRepository.findByIdMission(missionId)
@@ -113,33 +145,51 @@ public class MissionService {
 
         Order order = mission.getOrder();
 
-        // Supprimer le tracking
-        Tracking tracking = trackingRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Tracking not found"));
+        // Suppression du tracking lié
+        Tracking tracking = trackingRepository.findByMission(mission)
+                .orElseThrow(() -> new RuntimeException("Tracking not found"));
         trackingRepository.delete(tracking);
 
-        // Supprimer le paiement
-        Payment payment = paymentRepository.findByMission(mission).orElseThrow(() -> new RuntimeException("Payment not found"));
+        // Suppression du paiement lié
+        Payment payment = paymentRepository.findByMission(mission)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
         paymentRepository.delete(payment);
 
-        // Supprimer la mission
+        // Suppression de la mission
         missionRepository.delete(mission);
 
-        // Mettre à jour la commande
+        // Mise à jour du statut de la commande
         order.setStatus("CANCELED");
         order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
     }
 
+    /**
+     * Retourne la liste des missions publiques.
+     * @return liste des missions publiques sous forme de DTO
+     */
     public List<MissionResponse> getAllMissions() {
-        List<Mission> missions = missionRepository.findAll().stream().filter(mission -> mission.getIsPublic()).toList();
+        List<Mission> missions = missionRepository.findAll()
+                .stream()
+                .filter(Mission::getIsPublic)
+                .toList();
         return MissionMapper.toDtoList(missions);
     }
 
+    /**
+     * Retourne la liste de toutes les missions, y compris privées.
+     * @return liste complète des missions sous forme de DTO
+     */
     public List<MissionResponse> getPrivateMissions() {
         List<Mission> missions = missionRepository.findAll();
         return MissionMapper.toDtoList(missions);
     }
 
+    /**
+     * Retourne la liste des missions assignées à un utilisateur donné (livreur).
+     * @param user l'utilisateur (livreur)
+     * @return liste des missions de cet utilisateur sous forme de DTO
+     */
     public List<MissionResponse> getMyMissions(User user) {
         System.out.println("[getMyMissions] Missions de l'utilisateur : " + user.getIdUser());
         List<Mission> missions = missionRepository.findByTraveler(user);
@@ -147,6 +197,12 @@ public class MissionService {
         return MissionMapper.toDtoList(missions);
     }
 
+    /**
+     * Assigne un livreur à une mission.
+     * @param missionId l'UUID de la mission
+     * @param user le livreur à assigner
+     * @return la DTO de la mission mise à jour
+     */
     public MissionResponse assignDeliverer(UUID missionId, User user) {
         System.out.println("[assignDeliverer] Tentative d'affectation du livreur " + user.getIdUser() + " à la mission : " + missionId);
 
@@ -166,10 +222,16 @@ public class MissionService {
         return MissionMapper.toDto(updated);
     }
 
-
+    /**
+     * Désaffecte un livreur d'une mission.
+     * @param missionId l'UUID de la mission
+     * @param user le livreur à désassigner (vérification implicite)
+     * @return la DTO de la mission mise à jour
+     */
     public MissionResponse unAssignDeliver(UUID missionId, User user) {
         System.out.println("[unAssignDeliverer] Désaffection du livreur " + user.getIdUser() + " à la mission : " + missionId);
-        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Mission mission = missionRepository.findByIdMission(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission introuvable"));
         mission.setTraveler(null);
         mission.setStatus(MissionStatus.PENDING);
         mission.setAcceptanceDate(null);
@@ -178,6 +240,13 @@ public class MissionService {
         return MissionMapper.toDto(updated);
     }
 
+    /**
+     * Récupère la liste des missions à proximité d'un utilisateur dans un rayon donné.
+     * Utilise la formule de Haversine pour calculer la distance géographique.
+     * @param user l'utilisateur (avec latitude et longitude)
+     * @param radiusKm rayon de recherche en kilomètres
+     * @return liste des missions proches sous forme de DTO
+     */
     public List<MissionResponse> getMissionsNearby(User user, float radiusKm) {
         System.out.println("[getMissionsNearby] Recherche des missions à proximité de : " + user.getIdUser()
                 + " (lat: " + user.getLatitude() + ", lon: " + user.getLongitude() + "), rayon : " + radiusKm + "km");
@@ -203,15 +272,29 @@ public class MissionService {
         return MissionMapper.toDtoList(nearbyMissions);
     }
 
+    /**
+     * Récupère une mission par son ID.
+     * @param missionId l'UUID de la mission
+     * @return la DTO de la mission
+     */
     public MissionResponse getMissionById(UUID missionId) {
         System.out.println("[getMissionById] Mission avec l'id : " + missionId);
-        Mission mission = missionRepository.findByIdMission(missionId).orElseThrow(() -> new RuntimeException("Mission introuvable"));
+        Mission mission = missionRepository.findByIdMission(missionId)
+                .orElseThrow(() -> new RuntimeException("Mission introuvable"));
         System.out.println("[getMissionById] Mission récupérée : ");
         return MissionMapper.toDto(mission);
     }
 
+    /**
+     * Calcule la distance entre deux points géographiques via la formule de Haversine.
+     * @param lat1 latitude point 1
+     * @param lon1 longitude point 1
+     * @param lat2 latitude point 2
+     * @param lon2 longitude point 2
+     * @return distance en kilomètres
+     */
     public static double haversine(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371;
+        final int R = 6371; // Rayon moyen de la Terre en km
 
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
@@ -225,6 +308,12 @@ public class MissionService {
         System.out.println("[haversine] Distance calculée : " + result + " km");
         return result;
     }
+
+    /**
+     * Change l'état MissionDelivered d'une mission pour true.
+     * @param missionId l'uuid de la mission livrée
+     * @param user l'utilisateur qui livre
+     */
 
     public void delivered(UUID missionId, User user) throws StripeException {
         Mission mission = missionRepository.findByIdMission(missionId)
@@ -247,6 +336,12 @@ public class MissionService {
             System.out.println("[delivered] Mission déjà délivrée.");
         }
     }
+
+    /**
+     * Change l'état MissionDelivered d'une mission pour true.
+     * @param missionId l'uuid de la mission reçue
+     * @param user l'utilisateur qui reçoit
+     */
 
     public void received(UUID missionId, User user) throws StripeException {
         Mission mission = missionRepository.findByIdMission(missionId)

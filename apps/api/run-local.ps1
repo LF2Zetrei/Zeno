@@ -2,14 +2,14 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # Vérifie que le fichier .env existe
-if (-Not (Test-Path ".env")) {
+if (-Not (Test-Path "../../.env")) {
     Write-Error "❌ Le fichier .env est introuvable"
     exit 1
 }
 
 # Charge les variables depuis .env
 Write-Host "🔄 Chargement des variables d'environnement depuis .env"
-Get-Content .env | ForEach-Object {
+Get-Content ../../.env | ForEach-Object {
     if ($_ -match "^\s*([^#][^=]*)=(.*)$") {
         $key = $matches[1].Trim()
         $value = $matches[2].Trim()

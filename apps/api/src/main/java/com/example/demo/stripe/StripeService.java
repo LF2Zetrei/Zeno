@@ -20,7 +20,6 @@ import com.stripe.param.AccountLinkCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.TransferCreateParams;
 import com.stripe.param.identity.VerificationSessionCreateParams;
-import org.antlr.v4.runtime.misc.LogManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +33,6 @@ public class StripeService {
 
     @Value("${stripe.company.taxe.amount}")
     private float companyTaxAmount;
-
 
     @Value("${stripe.api.secret}")
     private String stripeSecretKey;
@@ -62,12 +60,17 @@ public class StripeService {
 
     public record StripePaymentIntent(String clientSecret, String intentId) {}
 
-
+    /**
+     * Crée une intention de paiement Stripe pour un montant donné.
+     *
+     * @param amount Montant en euros.
+     * @return PaymentIntentResponse contenant l'ID de l'intention et le secret client.
+     */
     public PaymentIntentResponse createPaymentIntent(double amount) {
         Stripe.apiKey = stripeSecretKey;
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount((long) (amount * 100))  // Stripe attend des centimes
+                .setAmount((long) (amount * 100))
                 .setCurrency("eur")
                 .build();
 
@@ -79,8 +82,13 @@ public class StripeService {
         }
     }
 
-
-
+    /**
+     * Crée une session d'identité Stripe pour vérification du document d'identité.
+     *
+     * @param userId ID de l'utilisateur concerné.
+     * @return URL de la session d'identité Stripe.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public String createIdentitySession(UUID userId) throws StripeException {
         Stripe.apiKey = stripeSecretKey;
 
@@ -94,6 +102,14 @@ public class StripeService {
         return session.getUrl();
     }
 
+    /**
+     * Transfère une somme en centimes vers un compte connecté Stripe.
+     *
+     * @param connectedAccountId ID du compte connecté Stripe.
+     * @param amountInCents Montant à transférer en centimes.
+     * @return Objet Transfer de Stripe.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public Transfer createTransferToUser(String connectedAccountId, long amountInCents) throws StripeException {
         Stripe.apiKey = stripeSecretKey;
 
@@ -106,6 +122,13 @@ public class StripeService {
         return Transfer.create(params);
     }
 
+    /**
+     * Crée un compte Stripe pour un utilisateur s'il n'existe pas déjà.
+     *
+     * @param user Utilisateur concerné.
+     * @return Message de confirmation avec l'ID du compte Stripe.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public String handleStripeAccountCreation(User user) throws StripeException {
         Stripe.apiKey = stripeSecretKey;
 
@@ -119,13 +142,18 @@ public class StripeService {
                 .build();
 
         Account account = Account.create(params);
-
         user.setStripeAccountId(account.getId());
         userRepository.save(user);
 
         return "Compte Stripe connecté créé : " + account.getId();
     }
 
+    /**
+     * Crée une intention de paiement Stripe liée à une mission.
+     *
+     * @param orderId ID de la commande.
+     * @return Secret client de l'intention de paiement.
+     */
     public String createMissionPaymentIntent(UUID orderId) {
         Order order = orderRepository.findByIdOrder(orderId)
                 .orElseThrow(() -> new RuntimeException("Order non trouvé"));
@@ -150,12 +178,17 @@ public class StripeService {
         return intentResponse.getClientSecret();
     }
 
+    /**
+     * Effectue un transfert d'argent vers le livreur d'une mission.
+     *
+     * @param missionId ID de la mission.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public void transferToDeliverer(UUID missionId) throws StripeException {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new RuntimeException("Mission non trouvée"));
 
         User deliverer = mission.getTraveler();
-
         Payment payment = paymentRepository.findByMission(mission)
                 .orElseThrow(() -> new RuntimeException("Paiement non trouvé"));
 
@@ -164,8 +197,6 @@ public class StripeService {
         }
 
         Float amount = payment.getAmount();
-
-        // Seuil défini dans application.properties
         if (amount <= minimumTransferAmount) {
             amount = minimumTransferAmount;
         }
@@ -177,7 +208,13 @@ public class StripeService {
         createTransferToUser(deliverer.getStripeAccountId(), amountToSend);
     }
 
-
+    /**
+     * Sauvegarde un paiement en attente dans la base de données.
+     *
+     * @param paymentIntentId ID de l'intention de paiement.
+     * @param userId ID de l'utilisateur.
+     * @param type Statut du paiement (ex : CREATED).
+     */
     public void savePendingPayment(String paymentIntentId, UUID userId, String type) {
         Payment pending = new Payment();
         pending.setUserId(userId);
@@ -186,10 +223,23 @@ public class StripeService {
         paymentRepository.save(pending);
     }
 
+    /**
+     * Vérifie si une intention de paiement est associée à un utilisateur.
+     *
+     * @param paymentIntentId ID de l'intention.
+     * @param userId ID de l'utilisateur.
+     * @return true si l'intention est liée, false sinon.
+     */
     public boolean isPaymentIntentLinkedToUser(String paymentIntentId, UUID userId) {
         return paymentRepository.existsByStripeIdAndUserId(paymentIntentId, userId);
     }
 
+    /**
+     * Crée une intention de paiement pour une mission avec un retour complet (ID + secret).
+     *
+     * @param orderId ID de la commande.
+     * @return PaymentIntentResponse contenant les informations Stripe.
+     */
     public PaymentIntentResponse createMissionPaymentIntentWithResponse(UUID orderId) {
         Order order = orderRepository.findByIdOrder(orderId)
                 .orElseThrow(() -> new RuntimeException("Order non trouvé"));
@@ -211,9 +261,16 @@ public class StripeService {
         payment.setUpdatedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        return intentResponse; // retourne à la fois ID et clientSecret
+        return intentResponse;
     }
 
+    /**
+     * Crée un nouveau compte Stripe EXPRESS pour un utilisateur.
+     *
+     * @param user Utilisateur concerné.
+     * @return ID du compte Stripe.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public String createStripeAccount(User user) throws StripeException {
         Stripe.apiKey = stripeSecretKey;
 
@@ -227,6 +284,13 @@ public class StripeService {
         return account.getId();
     }
 
+    /**
+     * Crée un lien d'onboarding pour finaliser la configuration du compte Stripe.
+     *
+     * @param accountId ID du compte Stripe.
+     * @return URL d'onboarding Stripe.
+     * @throws StripeException en cas d'erreur Stripe.
+     */
     public String createAccountLink(String accountId) throws StripeException {
         Stripe.apiKey = stripeSecretKey;
 
@@ -240,6 +304,4 @@ public class StripeService {
         AccountLink accountLink = AccountLink.create(params);
         return accountLink.getUrl();
     }
-
-
 }

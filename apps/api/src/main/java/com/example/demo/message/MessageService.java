@@ -3,13 +3,12 @@ package com.example.demo.message;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserService;
-import com.example.demo.message.Message;
-
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Service
 public class MessageService {
@@ -26,10 +25,16 @@ public class MessageService {
         this.userService = userService;
     }
 
-
-    // Création d'un message
+    /**
+     * Crée et sauvegarde un message envoyé par un utilisateur à un destinataire.
+     *
+     * @param recipientId UUID du destinataire
+     * @param content contenu textuel du message
+     * @param sender utilisateur qui envoie le message
+     * @return le message persisté
+     * @throws RuntimeException si le destinataire n'existe pas
+     */
     public Message createMessage(UUID recipientId, String content, User sender) {
-
         User recipient = userRepository.findById(recipientId)
                 .orElseThrow(() -> new RuntimeException("Destinataire non trouvé"));
 
@@ -42,7 +47,15 @@ public class MessageService {
         return messageRepository.save(message);
     }
 
-    // Récupérer les messages échangés avec un contact donné (récupère aussi ceux envoyés par le contact)
+    /**
+     * Récupère tous les messages échangés entre l'utilisateur courant et un contact donné.
+     * Inclut les messages envoyés et reçus.
+     *
+     * @param contactId UUID du contact
+     * @param jwt token JWT permettant d'identifier l'utilisateur courant
+     * @return liste des messages sous forme de DTO MesageResponse, triés par date d'envoi
+     * @throws RuntimeException si le contact n'existe pas
+     */
     public List<MesageResponse> getMessagesWithContact(UUID contactId, String jwt) {
         User currentUser = userService.getUserByJwt(jwt);
         User contact = userRepository.findById(contactId)
@@ -53,17 +66,24 @@ public class MessageService {
 
         messages.sort(Comparator.comparing(Message::getSentSince));
 
-        return messages.stream().map(this::toResponse).collect(Collectors.toList());
+        return messages.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    // Récupérer mes contacts : utilisateurs avec lesquels j'ai échangé au moins un message
+    /**
+     * Récupère la liste des pseudos des contacts avec qui l'utilisateur courant a échangé au moins un message.
+     *
+     * @param jwt token JWT de l'utilisateur courant
+     * @return liste de pseudos des contacts distincts
+     */
     public List<String> getMyContacts(String jwt) {
         User currentUser = userService.getUserByJwt(jwt);
 
-        // On récupère tous les messages envoyés ou reçus par l'utilisateur
+        // Récupère tous les messages envoyés ou reçus par l'utilisateur
         List<Message> messages = messageRepository.findBySenderOrRecipient(currentUser, currentUser);
 
-        // On récupère les pseudos distincts des contacts (exclure soi-même)
+        // Récupère les pseudos distincts des contacts (excluant l'utilisateur lui-même)
         Set<String> contacts = new HashSet<>();
         for (Message m : messages) {
             if (!m.getSender().equals(currentUser)) {
@@ -76,14 +96,28 @@ public class MessageService {
         return new ArrayList<>(contacts);
     }
 
-    // Récupérer un message par son ID
+    /**
+     * Récupère un message spécifique par son identifiant.
+     *
+     * @param messageId UUID du message à récupérer
+     * @return le message sous forme de DTO MesageResponse
+     * @throws RuntimeException si le message n'existe pas
+     */
     public MesageResponse getMessageById(UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new RuntimeException("Message non trouvé"));
         return toResponse(message);
     }
 
-    // Récupérer mes messages envoyés ou reçus avec un contact (plus précis que getMessagesWithContact)
+    /**
+     * Récupère les messages échangés entre l'utilisateur courant et un contact spécifique.
+     * Cette méthode est une variante plus ciblée de getMessagesWithContact.
+     *
+     * @param contactId UUID du contact
+     * @param jwt token JWT de l'utilisateur courant
+     * @return liste des messages sous forme de DTO MesageResponse
+     * @throws RuntimeException si le contact n'existe pas
+     */
     public List<MesageResponse> getMyMessagesWithContact(UUID contactId, String jwt) {
         User currentUser = userService.getUserByJwt(jwt);
         User contact = userRepository.findById(contactId)
@@ -92,10 +126,17 @@ public class MessageService {
         List<Message> messages = messageRepository.findBySenderAndRecipientOrRecipientAndSender(
                 currentUser, contact, currentUser, contact);
 
-        return messages.stream().map(this::toResponse).collect(Collectors.toList());
+        return messages.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    // Conversion Message -> DTO MesageResponse
+    /**
+     * Convertit une entité Message en DTO MesageResponse.
+     *
+     * @param message message à convertir
+     * @return DTO contenant uniquement les données nécessaires à la réponse
+     */
     private MesageResponse toResponse(Message message) {
         MesageResponse response = new MesageResponse();
         response.setId(message.getIdMessage());

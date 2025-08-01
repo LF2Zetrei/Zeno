@@ -18,6 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Controller REST gérant les opérations de paiement,
+ * incluant la création d'intentions de paiement Stripe,
+ * la mise à jour du statut des paiements, les remboursements,
+ * et le transfert de fonds vers les livreurs.
+ */
 @RestController
 @RequestMapping("/api/payment")
 public class PaymentController {
@@ -29,6 +35,9 @@ public class PaymentController {
     private final OrderRepository orderRepository;
     private final UserService userService;
 
+    private static final Pass classic_pass = Pass.CLASSIC;
+    private static final Pass premium_pass = Pass.PREMIUM;
+
     public PaymentController(PaymentService paymentService, StripeService stripeService, PaymentRepository paymentRepository, MissionRepository missionRepository, OrderRepository orderRepository, UserService userService) {
         this.paymentService = paymentService;
         this.stripeService = stripeService;
@@ -38,34 +47,62 @@ public class PaymentController {
         this.userService = userService;
     }
 
-    private static final Pass classic_pass = Pass.CLASSIC;
-    private static final Pass premium_pass = Pass.PREMIUM;
-
-
-    // 2. Update_payment_status
+    /**
+     * Met à jour le statut du paiement associé à une mission donnée.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @param missionId   L'identifiant unique de la mission concernée.
+     * @return            La ressource Payment mise à jour encapsulée dans un ResponseEntity.
+     */
     @PutMapping("/{missionId}/validate")
     public ResponseEntity<Payment> updatePaymentStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
         return ResponseEntity.ok(paymentService.updatePaymentStatus(missionId));
     }
 
-    // 3. Went_wrong
+    /**
+     * Marque le paiement d'une mission comme erroné en cas de problème.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @param missionId   L'identifiant unique de la mission concernée.
+     * @return            La ressource Payment mise à jour encapsulée dans un ResponseEntity.
+     */
     @PutMapping("/{missionId}/error")
     public ResponseEntity<Payment> markAsError(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
         return ResponseEntity.ok(paymentService.wentWrong(missionId));
     }
 
-    // 4. Refund_payment
+    /**
+     * Effectue un remboursement du paiement lié à une mission.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @param missionId   L'identifiant unique de la mission concernée.
+     * @return            La ressource Payment mise à jour encapsulée dans un ResponseEntity.
+     */
     @PutMapping("/{missionId}/refund")
     public ResponseEntity<Payment> refund(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
         return ResponseEntity.ok(paymentService.refundPayment(missionId));
     }
 
-    // 5. Get_payment_status
+    /**
+     * Récupère le statut actuel du paiement d'une mission.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @param missionId   L'identifiant unique de la mission concernée.
+     * @return            Le statut du paiement sous forme de chaîne de caractères encapsulé dans un ResponseEntity.
+     */
     @GetMapping("/{missionId}/status")
     public ResponseEntity<String> getStatus(@RequestHeader("Authorization") String authHeader,@PathVariable UUID missionId) {
         return ResponseEntity.ok(paymentService.getPaymentStatus(missionId));
     }
 
+    /**
+     * Crée une intention de paiement Stripe pour une mission spécifique.
+     *
+     * @param missionId   L'identifiant unique de la mission.
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @return            Un map contenant le clientSecret pour la finalisation du paiement Stripe.
+     * @throws StripeException Exception levée en cas de problème avec Stripe.
+     */
     @PostMapping("/{missionId}/intent")
     public ResponseEntity<Map<String, String>> createPaymentIntent(
             @PathVariable UUID missionId,
@@ -75,6 +112,12 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("clientSecret", clientSecret));
     }
 
+    /**
+     * Crée une intention de paiement pour l'achat d'un Classic Pass via Stripe.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @return            Un map contenant le clientSecret et l'ID du PaymentIntent.
+     */
     @PostMapping("/classicPass")
     public Map<String, String> createClassicPayment(@RequestHeader("Authorization") String authHeader) {
         User user = userService.getUserByJwt(authHeader);
@@ -88,6 +131,12 @@ public class PaymentController {
         );
     }
 
+    /**
+     * Crée une intention de paiement pour l'achat d'un Premium Pass via Stripe.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @return            Un map contenant le clientSecret et l'ID du PaymentIntent.
+     */
     @PostMapping("/premiumPass")
     public Map<String, String> createPremiumPayment(@RequestHeader("Authorization") String authHeader) {
         User user = userService.getUserByJwt(authHeader);
@@ -101,7 +150,13 @@ public class PaymentController {
         );
     }
 
-
+    /**
+     * Crée une intention de paiement Stripe pour une mission liée à une commande.
+     *
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @param orderId     L'identifiant unique de la commande associée à la mission.
+     * @return            Un map contenant le clientSecret et l'ID du PaymentIntent.
+     */
     @PostMapping("/pay_mission/{orderId}")
     public Map<String, String> createMissionPayment(
             @RequestHeader("Authorization") String authHeader,
@@ -121,8 +176,13 @@ public class PaymentController {
         );
     }
 
-
-
+    /**
+     * Effectue le transfert de paiement au livreur pour une mission donnée.
+     *
+     * @param missionId   L'identifiant unique de la mission.
+     * @param authHeader  L'en-tête d'autorisation contenant le JWT.
+     * @return            Un ResponseEntity avec un message de succès ou d'erreur.
+     */
     @PostMapping("/{missionId}/transfer")
     public ResponseEntity<String> payDeliverer(
             @PathVariable UUID missionId,
@@ -137,6 +197,5 @@ public class PaymentController {
             return ResponseEntity.status(400).body("Erreur : " + e.getMessage());
         }
     }
-
 
 }
