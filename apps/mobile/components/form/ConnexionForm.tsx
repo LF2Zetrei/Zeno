@@ -14,8 +14,8 @@ import { useAuth } from "../../context/AuthContext";
 import Constants from "expo-constants";
 
 export default function ConnexionForm() {
-  const [email, setEmail] = useState("fernandesl@cy-tech.fr");
-  const [password, setPassword] = useState("Lucasf64!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigation = useNavigation();
   const { login } = useAuth();
   const API_URL = Constants.expoConfig?.extra?.apiUrl;
